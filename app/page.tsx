@@ -1,65 +1,207 @@
-import Image from "next/image";
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import { SplitPane } from '@/components/SplitPane';
+import { InputPanel } from '@/components/InputPanel';
+import { PreviewPanel } from '@/components/PreviewPanel';
+import { SettingsDialog } from '@/components/SettingsDialog';
+import type { StyleId, Message, ModelInfo, ElementInfo } from '@/lib/types';
+
+declare global {
+  interface Window {
+    __vibeframe_sendChunk?: (chunk: string) => void;
+    __vibeframe_sendComplete?: () => void;
+  }
+}
 
 export default function Home() {
+  const [image, setImage] = useState<string | null>(null);
+  const [style, setStyle] = useState<StyleId>('minimal');
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [currentHTML, setCurrentHTML] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [settings, setSettings] = useState({ model: 'gpt-4o', customApiKey: '' });
+  const [availableModels, setAvailableModels] = useState<ModelInfo[]>([]);
+
+  useEffect(() => {
+    fetch('/api/models')
+      .then((res) => res.json())
+      .then((data: { models: ModelInfo[] }) => {
+        setAvailableModels(data.models);
+        const firstAvailable = data.models.find((m) => m.available);
+        if (firstAvailable) {
+          setSettings((prev) => ({ ...prev, model: firstAvailable.id }));
+        }
+      })
+      .catch(() => {
+        // silently ignore – models endpoint may not be ready
+      });
+  }, []);
+
+  const handleSend = useCallback(
+    async (text: string) => {
+      if (isGenerating) return;
+      setIsGenerating(true);
+
+      const userMessage: Message = {
+        role: 'user',
+        content: text,
+        image: image ?? undefined,
+      };
+      const updatedMessages = [...messages, userMessage];
+      setMessages(updatedMessages);
+
+      const sendChunk = window.__vibeframe_sendChunk;
+      const sendComplete = window.__vibeframe_sendComplete;
+      let fullHTML = '';
+
+      try {
+        const response = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            image,
+            prompt: text,
+            style,
+            history: messages,
+            model: settings.model,
+            apiKey: settings.customApiKey || undefined,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const reader = response.body?.getReader();
+        if (!reader) throw new Error('No response body');
+
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() ?? '';
+
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed.startsWith('data: ')) continue;
+
+            try {
+              const data = JSON.parse(trimmed.slice(6));
+              if (data.error) {
+                throw new Error(data.error);
+              }
+              if (data.chunk) {
+                fullHTML += data.chunk;
+                sendChunk?.(data.chunk);
+              }
+              if (data.done && data.html) {
+                fullHTML = data.html;
+                setCurrentHTML(data.html);
+              }
+            } catch (e) {
+              if (e instanceof SyntaxError) continue;
+              throw e;
+            }
+          }
+        }
+
+        setMessages([...updatedMessages, { role: 'assistant', content: fullHTML }]);
+        sendComplete?.();
+
+        if (image) {
+          setImage(null);
+        }
+      } catch (err) {
+        const errorMsg = err instanceof Error ? err.message : 'Unknown error';
+        setMessages([
+          ...updatedMessages,
+          { role: 'assistant', content: `Error: ${errorMsg}` },
+        ]);
+      } finally {
+        setIsGenerating(false);
+      }
+    },
+    [isGenerating, image, messages, style, settings],
+  );
+
+  const handleElementClick = useCallback((info: ElementInfo) => {
+    const desc = `[${info.positionDescription}] "${info.textContent}"`;
+    window.dispatchEvent(new CustomEvent('fill-input', { detail: desc }));
+  }, []);
+
+  const handleExport = useCallback(async () => {
+    if (!currentHTML) return;
+    try {
+      const response = await fetch('/api/export', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ html: currentHTML }),
+      });
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'vibeframe-export.html';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
+      // silently ignore export errors
+    }
+  }, [currentHTML]);
+
+  const handleRefresh = useCallback(() => {
+    if (!currentHTML) return;
+    const iframe = document.querySelector('iframe');
+    iframe?.contentWindow?.postMessage({ type: 'render', html: currentHTML }, '*');
+  }, [currentHTML]);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+    <main className="h-screen">
+      <button
+        onClick={() => setShowSettings(true)}
+        className="fixed top-3 right-3 z-40 rounded-full bg-white/80 p-2 shadow backdrop-blur hover:bg-white"
+        title="设置"
+      >
+        ⚙
+      </button>
+      <SplitPane
+        left={
+          <InputPanel
+            image={image}
+            onImageChange={setImage}
+            style={style}
+            onStyleChange={setStyle}
+            messages={messages}
+            isGenerating={isGenerating}
+            onSend={handleSend}
+          />
+        }
+        right={
+          <PreviewPanel
+            isGenerating={isGenerating}
+            currentHTML={currentHTML}
+            onElementClick={handleElementClick}
+            onExport={handleExport}
+            onRefresh={handleRefresh}
+          />
+        }
+      />
+      <SettingsDialog
+        isOpen={showSettings}
+        onClose={() => setShowSettings(false)}
+        settings={settings}
+        onSave={setSettings}
+        availableModels={availableModels}
+      />
+    </main>
   );
 }
