@@ -44,3 +44,4 @@ next-env.d.ts
 .env.local
 .env.production
 !.env.local.example
+!.env.production.example
