@@ -45,3 +45,7 @@ next-env.d.ts
 .env.production
 !.env.local.example
 !.env.production.example
+
+# 临时截图与 Windows 伪影
+*.png
+nul
