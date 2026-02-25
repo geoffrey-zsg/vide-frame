@@ -53,7 +53,7 @@ export function SessionList({
 
       {/* 下拉面板 */}
       {isOpen && (
-        <div className="absolute left-0 top-full mt-1 w-72 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-[400px] flex flex-col">
+        <div className="absolute right-0 top-full mt-1 w-72 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-[400px] flex flex-col">
           {/* 头部 */}
           <div className="flex items-center justify-between px-3 py-2 border-b border-gray-100">
             <span className="text-sm font-medium text-gray-700">历史会话</span>

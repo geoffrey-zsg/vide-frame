@@ -3,8 +3,8 @@ import type { StylePreset, StyleId } from './types';
 export const stylePresets: StylePreset[] = [
   {
     id: 'minimal',
-    name: 'Minimal',
-    description: 'Clean white background with generous whitespace, thin lines, and no shadows',
+    name: '极简白',
+    description: '纯白背景、大量留白、细线条、无阴影',
     promptInstruction:
       'Use a minimal, clean design style. Background must be pure white (#FFFFFF). ' +
       'Text color is near-black (#1A1A1A). Use generous whitespace and padding (at least 2rem). ' +
@@ -21,8 +21,8 @@ export const stylePresets: StylePreset[] = [
   },
   {
     id: 'dark',
-    name: 'Dark Mode',
-    description: 'Deep dark gradient background with soft highlights and blue accent color',
+    name: '暗夜模式',
+    description: '深色渐变背景、柔和高光、蓝色强调',
     promptInstruction:
       'Use a dark mode design. Background is a linear gradient from #0F0F1A to #1A1A2E. ' +
       'Primary text color is #E0E0E0, secondary text is #9CA3AF. ' +
@@ -39,8 +39,8 @@ export const stylePresets: StylePreset[] = [
   },
   {
     id: 'glass',
-    name: 'Glassmorphism',
-    description: 'Frosted glass effect with semi-transparent layers and backdrop blur',
+    name: '毛玻璃',
+    description: '磨砂玻璃效果、半透明层叠、背景模糊',
     promptInstruction:
       'Use a glassmorphism design style. Page background is a vivid gradient from #667EEA to #764BA2. ' +
       'Card and container backgrounds use rgba(255,255,255,0.15) with backdrop-filter: blur(12px). ' +
@@ -58,8 +58,8 @@ export const stylePresets: StylePreset[] = [
   },
   {
     id: 'corporate',
-    name: 'Corporate Blue',
-    description: 'Professional blue and white color scheme with clear hierarchy and clean typography',
+    name: '商务蓝',
+    description: '专业蓝白配色、清晰层次、规整排版',
     promptInstruction:
       'Use a professional corporate design. Background is #F8FAFC (light blue-gray). ' +
       'Primary text is #1E293B (dark slate). Secondary text is #64748B. ' +
