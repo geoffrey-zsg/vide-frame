@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import type { Session } from '@/lib/types';
 import { formatRelativeTime } from '@/lib/session-storage';
 
@@ -20,25 +20,49 @@ export function SessionList({
   onNewSession,
 }: SessionListProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState({ top: 0, right: 0 });
 
-  // 点击外部关闭下拉
+  // 计算下拉框定位（基于按钮位置，使用 fixed 避免被祖先 overflow 裁切）
+  const updatePosition = useCallback(() => {
+    if (!buttonRef.current) return;
+    const rect = buttonRef.current.getBoundingClientRect();
+    setPos({
+      top: rect.bottom + 4,
+      right: window.innerWidth - rect.right,
+    });
+  }, []);
+
+  // 打开时计算位置
   useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setIsOpen(false);
-      }
-    }
     if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
+      updatePosition();
+      window.addEventListener('resize', updatePosition);
+      return () => window.removeEventListener('resize', updatePosition);
     }
+  }, [isOpen, updatePosition]);
+
+  // 点击外部关闭
+  useEffect(() => {
+    if (!isOpen) return;
+    function handleClickOutside(e: MouseEvent) {
+      const target = e.target as Node;
+      if (
+        buttonRef.current?.contains(target) ||
+        dropdownRef.current?.contains(target)
+      ) return;
+      setIsOpen(false);
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen]);
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <>
       {/* 触发按钮 */}
       <button
+        ref={buttonRef}
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className="text-xs text-gray-500 hover:text-gray-800 px-2 py-1 rounded hover:bg-gray-100 transition-colors"
@@ -51,11 +75,15 @@ export function SessionList({
         历史
       </button>
 
-      {/* 下拉面板 */}
+      {/* 下拉面板 — fixed 定位，不受祖先 overflow 影响 */}
       {isOpen && (
-        <div className="absolute right-0 top-full mt-1 w-72 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-[400px] flex flex-col">
+        <div
+          ref={dropdownRef}
+          className="fixed w-72 bg-white rounded-lg shadow-lg border border-gray-200 z-[100] max-h-[400px] flex flex-col"
+          style={{ top: pos.top, right: pos.right }}
+        >
           {/* 头部 */}
-          <div className="flex items-center justify-between px-3 py-2 border-b border-gray-100">
+          <div className="flex items-center justify-between px-3 py-2 border-b border-gray-100 shrink-0">
             <span className="text-sm font-medium text-gray-700">历史会话</span>
             <button
               type="button"
@@ -115,6 +143,6 @@ export function SessionList({
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
