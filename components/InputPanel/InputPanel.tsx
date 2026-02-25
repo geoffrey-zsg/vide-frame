@@ -36,12 +36,19 @@ export function InputPanel({
   onNewSession,
 }: InputPanelProps) {
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col h-full bg-slate-50">
       {/* 标题栏 */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
-        <div>
-          <h1 className="text-lg font-semibold text-gray-900">VibeFrame</h1>
-          <p className="text-xs text-gray-500">草图即刻化境引擎</p>
+      <div className="flex items-center justify-between p-6 border-b border-slate-200">
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 rounded-xl bg-indigo-500 shadow-sm flex items-center justify-center">
+            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+            </svg>
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-slate-800 tracking-tight">VibeFrame</h1>
+            <p className="text-xs font-medium text-slate-500">草图即刻化境引擎</p>
+          </div>
         </div>
         <SessionList
           sessions={sessions}
@@ -53,7 +60,9 @@ export function InputPanel({
       </div>
 
       {/* 图片上传 */}
-      <ImageUpload image={image} onImageChange={onImageChange} />
+      <div className="px-4 pt-4">
+        <ImageUpload image={image} onImageChange={onImageChange} />
+      </div>
 
       {/* 风格选择 */}
       <StyleSelector value={style} onChange={onStyleChange} />

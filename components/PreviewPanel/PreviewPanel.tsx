@@ -106,23 +106,23 @@ export function PreviewPanel({
   const showSkeleton = !!renderError || (!currentHTML && !isGenerating);
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-slate-50/50">
       {/* Toolbar */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200 bg-gray-50 shrink-0">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-white/80 backdrop-blur shrink-0 shadow-sm z-20">
         <div className="flex items-center gap-3 text-sm min-w-0">
           {renderError ? (
-            <span className="flex items-center gap-1 text-red-500 shrink-0">
+            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-red-50 text-red-700 font-medium shrink-0 shadow-sm border border-red-100">
               <span className="w-2 h-2 rounded-full bg-red-500" />
               错误
             </span>
           ) : isGenerating ? (
-            <span className="flex items-center gap-1 text-blue-500 shrink-0">
-              <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-indigo-50 text-indigo-700 font-medium shrink-0 shadow-sm border border-indigo-100">
+              <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
               生成中...
             </span>
           ) : (
-            <span className="flex items-center gap-1 text-green-600 shrink-0">
-              <span className="w-2 h-2 rounded-full bg-green-500" />
+            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-700 font-medium shrink-0 shadow-sm border border-emerald-100">
+              <span className="w-2 h-2 rounded-full bg-emerald-500" />
               已完成
             </span>
           )}
@@ -130,23 +130,23 @@ export function PreviewPanel({
           <button
             type="button"
             onClick={onOpenSettings}
-            className="text-xs text-gray-500 hover:text-gray-800 truncate max-w-[200px] border border-gray-200 rounded px-2 py-0.5 hover:bg-gray-100 transition-colors"
+            className="text-xs font-medium text-slate-600 hover:text-slate-900 truncate max-w-[200px] border border-slate-200 bg-white rounded-md px-2.5 py-1.5 hover:bg-slate-50 transition-colors shadow-sm cursor-pointer"
             title="点击修改模型配置"
           >
             {providerName} / {modelName}
           </button>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2">
           <button
             onClick={onRefresh}
-            className="px-2 py-1 text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors"
+            className="px-3 py-1.5 text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-all duration-200 cursor-pointer"
             title="刷新预览"
           >
             刷新
           </button>
           <button
             onClick={onExport}
-            className="px-2 py-1 text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors"
+            className="px-3 py-1.5 text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-all duration-200 cursor-pointer"
             title="导出 HTML"
           >
             导出 HTML

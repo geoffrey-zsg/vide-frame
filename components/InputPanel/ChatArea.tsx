@@ -148,48 +148,56 @@ export function ChatArea({ messages, isGenerating, onSend }: ChatAreaProps) {
       </div>
 
       {/* Input area */}
-      <div className="border-t border-gray-200 p-3 flex items-end gap-2">
-        <textarea
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="描述你想要的界面..."
-          rows={2}
-          className="flex-1 resize-none rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
-        />
-        {/* Microphone button */}
-        <button
-          type="button"
-          onClick={toggleVoice}
-          className={`flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-lg transition-colors ${
-            isListening
-              ? 'bg-red-100 text-red-600 hover:bg-red-200'
-              : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-          }`}
-          aria-label={isListening ? 'Stop voice input' : 'Start voice input'}
-        >
-          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V5z" />
-            <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
-          </svg>
-        </button>
-        {/* Send button */}
-        <button
-          type="button"
-          onClick={handleSend}
-          disabled={!input.trim() || isGenerating}
-          className="flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-lg bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-          aria-label="Send message"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M5 12h14M12 5l7 7-7 7"
-            />
-          </svg>
-        </button>
+      <div className="p-4 bg-slate-50/80 backdrop-blur">
+        <div className="relative flex items-end gap-2 p-2 bg-white border border-slate-200 rounded-2xl shadow-sm focus-within:border-indigo-400 focus-within:ring-4 focus-within:ring-indigo-500/10 transition-all duration-200">
+          <textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="描述你想要的界面..."
+            rows={1}
+            className="flex-1 max-h-32 min-h-[40px] resize-none bg-transparent px-3 py-2.5 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none"
+            style={{
+              height: 'auto',
+              maxHeight: '8rem',
+            }}
+          />
+          <div className="flex items-center gap-1.5 pb-1 pr-1">
+            {/* Microphone button */}
+            <button
+              type="button"
+              onClick={toggleVoice}
+              className={`flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-xl transition-all duration-200 ${
+                isListening
+                  ? 'bg-red-50 text-red-500 hover:bg-red-100'
+                  : 'text-slate-400 hover:bg-slate-100 hover:text-slate-600'
+              }`}
+              aria-label={isListening ? 'Stop voice input' : 'Start voice input'}
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V5z" />
+                <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
+              </svg>
+            </button>
+            {/* Send button */}
+            <button
+              type="button"
+              onClick={handleSend}
+              disabled={!input.trim() || isGenerating}
+              className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-xl bg-indigo-500 text-white shadow-sm hover:bg-indigo-600 hover:shadow disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              aria-label="Send message"
+            >
+              <svg className="w-4 h-4 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2.5}
+                  d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

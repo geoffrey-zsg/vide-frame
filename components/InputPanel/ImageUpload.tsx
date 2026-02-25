@@ -49,52 +49,55 @@ export function ImageUpload({ image, onImageChange }: ImageUploadProps) {
 
   if (image) {
     return (
-      <div className="relative p-3">
+      <div className="relative p-2 group">
+        <div className="absolute inset-2 bg-slate-100 rounded-2xl shadow-inner -z-10"></div>
         <img
           src={`data:image/png;base64,${image}`}
           alt="uploaded sketch"
-          className="max-h-48 w-full object-contain rounded-lg border border-gray-200"
+          className="max-h-48 w-full object-contain rounded-2xl border border-slate-200 shadow-sm transition-transform duration-300 ease-in-out group-hover:shadow-md"
         />
         <button
           type="button"
           onClick={() => onImageChange(null)}
-          className="absolute top-5 right-5 w-7 h-7 flex items-center justify-center rounded-full bg-black/60 text-white text-sm hover:bg-black/80 transition-colors"
+          className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-slate-900/70 text-white text-sm opacity-0 group-hover:opacity-100 backdrop-blur-sm hover:bg-red-500/90 hover:scale-105 transition-all duration-200 shadow-sm"
           aria-label="Remove image"
         >
-          ✕
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
         </button>
       </div>
     );
   }
 
   return (
-    <div className="p-3">
+    <div className="p-1">
       <div
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         onClick={() => inputRef.current?.click()}
-        className={`flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed p-6 cursor-pointer transition-colors ${
+        className={`flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed p-6 cursor-pointer transition-all duration-200 ease-in-out ${
           isDragging
-            ? 'border-blue-400 bg-blue-50'
-            : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
+            ? 'border-indigo-400 bg-indigo-50/50 scale-[0.98]'
+            : 'border-slate-300 bg-slate-50 hover:border-indigo-400 hover:bg-slate-100/80 shadow-sm hover:shadow'
         }`}
       >
-        <svg
-          className="w-8 h-8 text-gray-400"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={1.5}
-            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-          />
-        </svg>
-        <p className="text-sm text-gray-500">
-          拖拽草图到此处，或<span className="text-blue-500 font-medium">点击上传</span>
+        <div className="p-3 bg-white rounded-full shadow-sm">
+          <svg
+            className="w-6 h-6 text-indigo-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+            />
+          </svg>
+        </div>
+        <p className="text-sm text-slate-500 font-medium">
+          拖拽草图到此处，或<span className="text-indigo-600 font-semibold hover:text-indigo-700 transition-colors">点击上传</span>
         </p>
         <input
           ref={inputRef}
