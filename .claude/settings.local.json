@@ -1,22 +1,27 @@
 {
   "permissions": {
     "allow": [
-      "Bash(dir:*)",
-      "Bash(pnpm create:*)",
-      "Bash(yes:*)",
-      "Bash(pnpm add:*)",
-      "Bash(pnpm approve-builds:*)",
-      "Bash(\"C:\\\\workspace\\\\vibecoding\\\\claude\\\\vibe-frame\\\\vitest.config.ts\" << 'VITEST_EOF'\nimport { defineConfig } from \"vitest/config\";\nimport react from \"@vitejs/plugin-react\";\nimport path from \"path\";\n\nexport default defineConfig\\({\n  plugins: [react\\(\\)],\n  test: {\n    environment: \"jsdom\",\n    globals: true,\n    setupFiles: [\"./vitest.setup.ts\"],\n  },\n  resolve: {\n    alias: {\n      \"@\": path.resolve\\(__dirname, \"./\"\\),\n    },\n  },\n}\\);\nVITEST_EOF)",
-      "Bash(\"C:\\\\workspace\\\\vibecoding\\\\claude\\\\vibe-frame\\\\vitest.setup.ts\" << 'SETUP_EOF'\nimport \"@testing-library/jest-dom/vitest\";\nSETUP_EOF)",
-      "Bash(pnpm install:*)",
-      "Bash(\"C:\\\\workspace\\\\vibecoding\\\\claude\\\\vibe-frame\\\\.env.local.example\" << 'ENV_EOF'\nOPENAI_API_KEY=sk-xxx\nANTHROPIC_API_KEY=sk-ant-xxx\nQWEN_API_KEY=sk-xxx\nENV_EOF)",
-      "Bash(\"C:\\\\workspace\\\\vibecoding\\\\claude\\\\vibe-frame\\\\.gitignore\" << 'GITIGNORE_EOF'\n\n# explicit env overrides\n.env.local\n.env.production\n!.env.local.example\nGITIGNORE_EOF)",
-      "Bash(timeout 15 pnpm dev:*)",
-      "Bash(pnpm test:run:*)",
-      "Bash(\"C:\\\\workspace\\\\vibecoding\\\\claude\\\\vibe-frame\\\\__tests__\\\\setup.test.ts\" << 'TEST_EOF'\nimport { describe, it, expect } from \"vitest\";\n\ndescribe\\(\"setup\", \\(\\) => {\n  it\\(\"should work\", \\(\\) => {\n    expect\\(true\\).toBe\\(true\\);\n  }\\);\n}\\);\nTEST_EOF)",
-      "Bash(git init:*)",
-      "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(*)",
+      "Read(*)",
+      "Write(*)",
+      "Edit(*)",
+      "Glob(*)",
+      "Grep(*)",
+      "WebFetch",
+      "WebSearch",
+      "Bash(git push *)",
+      "Bash(git push)",
+      "Bash(npm *)",
+      "Bash(pnpm *)",
+      "Skill(agent-browser)"
+    ],
+    "deny": [
+      "Read(.env*)",
+      "Read(**/.env*)",
+      "Read(~/.ssh/**)",
+      "Bash(rm *)",
+      "Bash(del *)",
+      "Bash(rmdir *)"
     ]
   }
 }

@@ -2,14 +2,24 @@ import OpenAI from 'openai'
 import type { LLMProvider, GenerateParams } from '../types'
 
 export class OpenAIProvider implements LLMProvider {
-  name = 'GPT-4o'
+  name: string
   supportsVision = true
 
-  constructor(private apiKey: string) {}
+  constructor(
+    private apiKey: string,
+    private baseURL?: string,
+    private model: string = 'gpt-4o',
+    displayName: string = 'GPT-4o',
+  ) {
+    this.name = displayName
+  }
 
   async *generate(params: GenerateParams): AsyncIterable<string> {
     const { image, prompt, systemPrompt, history } = params
-    const client = new OpenAI({ apiKey: this.apiKey })
+    const client = new OpenAI({
+      apiKey: this.apiKey,
+      ...(this.baseURL && { baseURL: this.baseURL }),
+    })
 
     const messages: OpenAI.ChatCompletionMessageParam[] = []
 
@@ -51,7 +61,7 @@ export class OpenAIProvider implements LLMProvider {
     }
 
     const stream = await client.chat.completions.create({
-      model: 'gpt-4o',
+      model: this.model,
       messages,
       stream: true,
       max_tokens: 16384,

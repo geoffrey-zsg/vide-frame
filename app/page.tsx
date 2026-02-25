@@ -21,7 +21,7 @@ export default function Home() {
   const [currentHTML, setCurrentHTML] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [settings, setSettings] = useState({ model: 'gpt-4o', customApiKey: '' });
+  const [settings, setSettings] = useState({ model: 'qwen-vl', customApiKey: '' });
   const [availableModels, setAvailableModels] = useState<ModelInfo[]>([]);
 
   useEffect(() => {

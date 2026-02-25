@@ -14,6 +14,20 @@ interface ModelDefinition {
 
 const MODEL_DEFINITIONS: ModelDefinition[] = [
   {
+    id: 'qwen-vl',
+    name: '通义千问 VL',
+    envKey: 'QWEN_API_KEY',
+    openRouterModel: 'qwen/qwen-2.5-vl-72b-instruct',
+    factory: (apiKey) => new QwenProvider(apiKey),
+  },
+  {
+    id: 'deepseek',
+    name: 'DeepSeek V3',
+    envKey: 'DEEPSEEK_API_KEY',
+    openRouterModel: 'deepseek/deepseek-chat-v3-0324',
+    factory: (apiKey) => new OpenAIProvider(apiKey, 'https://api.deepseek.com/v1', 'deepseek-chat', 'DeepSeek V3'),
+  },
+  {
     id: 'gpt-4o',
     name: 'GPT-4o',
     envKey: 'OPENAI_API_KEY',
@@ -26,13 +40,6 @@ const MODEL_DEFINITIONS: ModelDefinition[] = [
     envKey: 'ANTHROPIC_API_KEY',
     openRouterModel: 'anthropic/claude-sonnet-4-20250514',
     factory: (apiKey) => new ClaudeProvider(apiKey),
-  },
-  {
-    id: 'qwen-vl',
-    name: '通义千问 VL',
-    envKey: 'QWEN_API_KEY',
-    openRouterModel: 'qwen/qwen-2.5-vl-72b-instruct',
-    factory: (apiKey) => new QwenProvider(apiKey),
   },
 ]
 
