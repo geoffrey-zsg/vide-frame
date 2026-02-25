@@ -8,6 +8,14 @@ import {
   type KeyboardEvent,
 } from 'react';
 import type { Message } from '@/lib/types';
+import { CollapsibleCode } from './CollapsibleCode';
+
+// 判断 assistant 消息是否为 HTML 代码
+function isHTMLContent(msg: Message): boolean {
+  if (msg.role !== 'assistant') return false;
+  const trimmed = msg.content.trim();
+  return trimmed.startsWith('<') || trimmed.startsWith('<!DOCTYPE');
+}
 
 // Compat interface for SpeechRecognition API (non-standard / vendor-prefixed)
 interface SpeechRecognitionCompat {
@@ -122,13 +130,17 @@ export function ChatArea({ messages, isGenerating, onSend }: ChatAreaProps) {
           messages.map((msg, idx) => (
             <div
               key={idx}
-              className={`rounded-lg px-4 py-2.5 text-sm whitespace-pre-wrap ${
+              className={`rounded-lg px-4 py-2.5 text-sm ${
                 msg.role === 'user'
                   ? 'bg-blue-50 text-blue-900 ml-6'
                   : 'bg-gray-50 text-gray-700 mr-6'
               }`}
             >
-              {msg.content}
+              {isHTMLContent(msg) ? (
+                <CollapsibleCode code={msg.content} />
+              ) : (
+                <span className="whitespace-pre-wrap">{msg.content}</span>
+              )}
             </div>
           ))
         )}

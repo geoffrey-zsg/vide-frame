@@ -1,13 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { PROVIDER_CONFIGS } from '@/lib/model-config';
+import type { ProviderId } from '@/lib/model-config';
+import type { UserSettings } from '@/lib/types';
 
 interface SettingsDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  settings: { model: string; customApiKey: string };
-  onSave: (settings: { model: string; customApiKey: string }) => void;
-  availableModels: { id: string; name: string; available: boolean }[];
+  settings: UserSettings;
+  onSave: (settings: UserSettings) => void;
 }
 
 export function SettingsDialog({
@@ -15,15 +17,30 @@ export function SettingsDialog({
   onClose,
   settings,
   onSave,
-  availableModels,
 }: SettingsDialogProps) {
-  const [localSettings, setLocalSettings] = useState(settings);
+  const [localSettings, setLocalSettings] = useState<UserSettings>(settings);
 
   useEffect(() => {
     setLocalSettings(settings);
   }, [settings]);
 
   if (!isOpen) return null;
+
+  // 当前选中的 provider 配置
+  const currentProvider = PROVIDER_CONFIGS.find(
+    (p) => p.id === localSettings.provider,
+  );
+
+  const handleProviderChange = (providerId: string) => {
+    const provider = PROVIDER_CONFIGS.find((p) => p.id === providerId);
+    if (!provider) return;
+    // 切换 provider 时自动选中该 provider 的第一个 model
+    setLocalSettings({
+      ...localSettings,
+      provider: providerId as ProviderId,
+      model: provider.models[0]?.id ?? '',
+    });
+  };
 
   const handleSave = () => {
     onSave(localSettings);
@@ -39,9 +56,27 @@ export function SettingsDialog({
         className="bg-white rounded-xl shadow-xl max-w-md w-full p-6"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-lg font-semibold mb-4">设置</h2>
+        <h2 className="text-lg font-semibold mb-4">模型配置</h2>
 
-        {/* 模型选择 */}
+        {/* Provider 选择 */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Provider
+          </label>
+          <select
+            value={localSettings.provider}
+            onChange={(e) => handleProviderChange(e.target.value)}
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          >
+            {PROVIDER_CONFIGS.map((provider) => (
+              <option key={provider.id} value={provider.id}>
+                {provider.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Model 选择（联动 Provider） */}
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-1">
             模型
@@ -53,10 +88,10 @@ export function SettingsDialog({
             }
             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
-            {availableModels.map((model) => (
+            {currentProvider?.models.map((model) => (
               <option key={model.id} value={model.id}>
                 {model.name}
-                {!model.available ? ' (未配置)' : ''}
+                {model.supportsVision ? '' : ' (不支持图片)'}
               </option>
             ))}
           </select>
@@ -69,18 +104,15 @@ export function SettingsDialog({
           </label>
           <input
             type="password"
-            value={localSettings.customApiKey}
+            value={localSettings.apiKey}
             onChange={(e) =>
-              setLocalSettings({
-                ...localSettings,
-                customApiKey: e.target.value,
-              })
+              setLocalSettings({ ...localSettings, apiKey: e.target.value })
             }
-            placeholder="留空则使用服务端默认配置"
+            placeholder="输入对应 Provider 的 API Key"
             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
           <p className="mt-1 text-xs text-gray-500">
-            输入自定义 API Key 以使用您自己的配额，留空将使用服务端默认配置。
+            API Key 仅存储在浏览器本地，不会上传至服务端存储。
           </p>
         </div>
 
@@ -96,7 +128,8 @@ export function SettingsDialog({
           <button
             type="button"
             onClick={handleSave}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+            disabled={!localSettings.apiKey.trim()}
+            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
             保存
           </button>

@@ -1,79 +1,35 @@
-import type { LLMProvider, ModelInfo } from '../types'
+import type { LLMProvider } from '../types'
+import type { ProviderId } from '../model-config'
 import { OpenAIProvider } from './openai'
 import { ClaudeProvider } from './claude'
 import { QwenProvider } from './qwen'
 import { OpenRouterProvider } from './openrouter'
 
-interface ModelDefinition {
-  id: string
-  name: string
-  envKey: string
-  openRouterModel: string
-  factory: (apiKey: string) => LLMProvider
-}
-
-const MODEL_DEFINITIONS: ModelDefinition[] = [
-  {
-    id: 'qwen-vl',
-    name: '通义千问 VL',
-    envKey: 'QWEN_API_KEY',
-    openRouterModel: 'qwen/qwen-2.5-vl-72b-instruct',
-    factory: (apiKey) => new QwenProvider(apiKey),
-  },
-  {
-    id: 'deepseek',
-    name: 'DeepSeek V3',
-    envKey: 'DEEPSEEK_API_KEY',
-    openRouterModel: 'deepseek/deepseek-chat-v3-0324',
-    factory: (apiKey) => new OpenAIProvider(apiKey, 'https://api.deepseek.com/v1', 'deepseek-chat', 'DeepSeek V3'),
-  },
-  {
-    id: 'gpt-4o',
-    name: 'GPT-4o',
-    envKey: 'OPENAI_API_KEY',
-    openRouterModel: 'openai/gpt-4o',
-    factory: (apiKey) => new OpenAIProvider(apiKey),
-  },
-  {
-    id: 'claude-sonnet',
-    name: 'Claude Sonnet',
-    envKey: 'ANTHROPIC_API_KEY',
-    openRouterModel: 'anthropic/claude-sonnet-4-20250514',
-    factory: (apiKey) => new ClaudeProvider(apiKey),
-  },
-]
-
-function getOpenRouterKey(): string | undefined {
-  return process.env.OPENROUTER_API_KEY
-}
-
-export function getLLMProvider(modelId: string, userApiKey?: string): LLMProvider {
-  const definition = MODEL_DEFINITIONS.find((d) => d.id === modelId)
-  if (!definition) {
-    throw new Error(`Unknown model: ${modelId}`)
+/**
+ * 根据 provider 类型 + model + apiKey 创建 LLM Provider 实例。
+ * 不再依赖服务端环境变量，完全由客户端传入参数驱动。
+ */
+export function getLLMProvider(
+  provider: ProviderId,
+  model: string,
+  apiKey: string,
+): LLMProvider {
+  if (!apiKey) {
+    throw new Error('API Key 是必填项，请在设置中配置。')
   }
 
-  // Priority: user-provided key > direct API key > OpenRouter
-  const directKey = userApiKey ?? process.env[definition.envKey]
-  if (directKey) {
-    return definition.factory(directKey)
+  switch (provider) {
+    case 'openai':
+      return new OpenAIProvider(apiKey, undefined, model, 'OpenAI')
+    case 'anthropic':
+      return new ClaudeProvider(apiKey, model)
+    case 'qwen':
+      return new QwenProvider(apiKey, model)
+    case 'deepseek':
+      return new OpenAIProvider(apiKey, 'https://api.deepseek.com/v1', model, 'DeepSeek')
+    case 'openrouter':
+      return new OpenRouterProvider(apiKey, model, model)
+    default:
+      throw new Error(`未知的 Provider: ${provider}`)
   }
-
-  const openRouterKey = getOpenRouterKey()
-  if (openRouterKey) {
-    return new OpenRouterProvider(openRouterKey, definition.openRouterModel, definition.name)
-  }
-
-  throw new Error(
-    `No API key for model ${modelId}. Set ${definition.envKey} or OPENROUTER_API_KEY.`
-  )
-}
-
-export function getAvailableModels(): ModelInfo[] {
-  const openRouterKey = getOpenRouterKey()
-  return MODEL_DEFINITIONS.map((d) => ({
-    id: d.id,
-    name: d.name,
-    available: !!process.env[d.envKey] || !!openRouterKey,
-  }))
 }

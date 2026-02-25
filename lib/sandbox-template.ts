@@ -22,6 +22,28 @@ export function getSandboxTemplate(): string {
     const root = document.getElementById('vf-root');
     let chunks = '';
     let highlightedEl = null;
+    let renderTimer = null;
+    let isFirstChunk = true;
+    const RENDER_INTERVAL = 2000; // 节流间隔：2 秒
+
+    // 立即渲染当前累积的 chunks
+    function renderNow() {
+      if (renderTimer) {
+        clearTimeout(renderTimer);
+        renderTimer = null;
+      }
+      try {
+        root.innerHTML = chunks;
+      } catch (err) {
+        parent.postMessage({ type: 'render-error', error: String(err) }, '*');
+      }
+    }
+
+    // 延迟渲染：若已有计时器则跳过，否则启动新计时器
+    function scheduleRender() {
+      if (renderTimer) return;
+      renderTimer = setTimeout(renderNow, RENDER_INTERVAL);
+    }
 
     function clearHighlight() {
       if (highlightedEl) {
@@ -36,25 +58,25 @@ export function getSandboxTemplate(): string {
 
       switch (msg.type) {
         case 'render':
-          root.innerHTML = msg.html;
           chunks = msg.html;
+          isFirstChunk = true;
+          renderNow();
           break;
 
         case 'render-chunk':
           chunks += msg.chunk;
-          try {
-            root.innerHTML = chunks;
-          } catch (err) {
-            parent.postMessage({ type: 'render-error', error: String(err) }, '*');
+          if (isFirstChunk) {
+            // 首个 chunk 立即渲染，避免用户感觉卡顿
+            isFirstChunk = false;
+            renderNow();
+          } else {
+            scheduleRender();
           }
           break;
 
         case 'render-complete':
-          try {
-            root.innerHTML = chunks;
-          } catch (err) {
-            parent.postMessage({ type: 'render-error', error: String(err) }, '*');
-          }
+          isFirstChunk = true;
+          renderNow();
           break;
 
         case 'highlight':

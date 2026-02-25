@@ -6,8 +6,8 @@ import type {
   StyleId,
   StylePreset,
   GenerateRequest,
-  ModelInfo,
-  ModelsResponse,
+  UserSettings,
+  Session,
   HostMessage,
   ElementInfo,
   SandboxMessage,
@@ -54,7 +54,8 @@ describe('Core type definitions', () => {
       prompt: 'Create a navbar',
       style: 'minimal',
       history: [],
-      model: 'claude-opus-4-6',
+      provider: 'openai',
+      model: 'gpt-4o',
       apiKey: 'sk-test',
       elementContext: '<nav>...</nav>',
     };
@@ -62,7 +63,8 @@ describe('Core type definitions', () => {
     expect(style).toBe('dark');
     expect(preset.id).toBe('glass');
     expect(preset.previewColors.accent).toBe('#0070f3');
-    expect(request.model).toBe('claude-opus-4-6');
+    expect(request.model).toBe('gpt-4o');
+    expect(request.provider).toBe('openai');
     expect(request.history).toHaveLength(0);
   });
 
@@ -84,8 +86,21 @@ describe('Core type definitions', () => {
     const errorMsg: SandboxMessage = { type: 'render-error', error: 'Syntax error' };
     const readyMsg: SandboxMessage = { type: 'ready' };
 
-    const modelInfo: ModelInfo = { id: 'gpt-4', name: 'GPT-4', available: true };
-    const modelsResponse: ModelsResponse = { models: [modelInfo] };
+    const userSettings: UserSettings = {
+      provider: 'openai',
+      model: 'gpt-4o',
+      apiKey: 'sk-test',
+    };
+
+    const session: Session = {
+      id: 'test-id',
+      title: '测试会话',
+      messages: [],
+      currentHTML: null,
+      style: 'minimal',
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
 
     expect(renderMsg.type).toBe('render');
     expect(chunkMsg.type).toBe('render-chunk');
@@ -96,7 +111,7 @@ describe('Core type definitions', () => {
     expect(errorMsg.type).toBe('render-error');
     expect(readyMsg.type).toBe('ready');
     expect(elementInfo.tagName).toBe('button');
-    expect(modelsResponse.models).toHaveLength(1);
-    expect(modelsResponse.models[0].available).toBe(true);
+    expect(userSettings.provider).toBe('openai');
+    expect(session.title).toBe('测试会话');
   });
 });

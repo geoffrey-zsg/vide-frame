@@ -5,7 +5,7 @@ export class QwenProvider implements LLMProvider {
   name = '通义千问 VL'
   supportsVision = true
 
-  constructor(private apiKey: string) {}
+  constructor(private apiKey: string, private model: string = 'qwen-vl-max') {}
 
   async *generate(params: GenerateParams): AsyncIterable<string> {
     const { image, prompt, systemPrompt, history } = params
@@ -54,7 +54,7 @@ export class QwenProvider implements LLMProvider {
     }
 
     const stream = await client.chat.completions.create({
-      model: 'qwen-vl-max',
+      model: this.model,
       messages,
       stream: true,
       max_tokens: 16384,

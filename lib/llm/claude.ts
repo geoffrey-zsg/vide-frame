@@ -5,7 +5,7 @@ export class ClaudeProvider implements LLMProvider {
   name = 'Claude Sonnet'
   supportsVision = true
 
-  constructor(private apiKey: string) {}
+  constructor(private apiKey: string, private model: string = 'claude-sonnet-4-20250514') {}
 
   async *generate(params: GenerateParams): AsyncIterable<string> {
     const { image, prompt, systemPrompt, history } = params
@@ -56,7 +56,7 @@ export class ClaudeProvider implements LLMProvider {
     }
 
     const stream = client.messages.stream({
-      model: 'claude-sonnet-4-20250514',
+      model: this.model,
       system: systemPrompt,
       messages,
       max_tokens: 16384,

@@ -1,4 +1,6 @@
-// Core TypeScript type definitions for vibe-frame
+// VibeFrame 核心类型定义
+
+import type { ProviderId } from './model-config'
 
 export interface Message {
   role: 'user' | 'assistant';
@@ -33,24 +35,34 @@ export interface StylePreset {
   };
 }
 
+/** 用户设置（持久化到 localStorage） */
+export interface UserSettings {
+  provider: ProviderId;
+  model: string;
+  apiKey: string;
+}
+
+/** 前端 → /api/generate 的请求体 */
 export interface GenerateRequest {
   image?: string;
   prompt: string;
   style: StyleId;
   history: Message[];
+  provider: ProviderId;
   model: string;
-  apiKey?: string;
+  apiKey: string;
   elementContext?: string;
 }
 
-export interface ModelInfo {
+/** 会话记录（持久化到 localStorage） */
+export interface Session {
   id: string;
-  name: string;
-  available: boolean;
-}
-
-export interface ModelsResponse {
-  models: ModelInfo[];
+  title: string;
+  messages: Message[];
+  currentHTML: string | null;
+  style: StyleId;
+  createdAt: number;
+  updatedAt: number;
 }
 
 export type HostMessage =

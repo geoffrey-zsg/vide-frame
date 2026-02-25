@@ -18,6 +18,9 @@ interface PreviewPanelProps {
   onElementClick: (info: ElementInfo) => void;
   onExport: () => void;
   onRefresh: () => void;
+  providerName: string;
+  modelName: string;
+  onOpenSettings: () => void;
 }
 
 export function PreviewPanel({
@@ -26,6 +29,9 @@ export function PreviewPanel({
   onElementClick,
   onExport,
   onRefresh,
+  providerName,
+  modelName,
+  onOpenSettings,
 }: PreviewPanelProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [iframeReady, setIframeReady] = useState(false);
@@ -103,23 +109,32 @@ export function PreviewPanel({
     <div className="flex flex-col h-full">
       {/* Toolbar */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200 bg-gray-50 shrink-0">
-        <div className="flex items-center gap-2 text-sm">
+        <div className="flex items-center gap-3 text-sm min-w-0">
           {renderError ? (
-            <span className="flex items-center gap-1 text-red-500">
+            <span className="flex items-center gap-1 text-red-500 shrink-0">
               <span className="w-2 h-2 rounded-full bg-red-500" />
               错误
             </span>
           ) : isGenerating ? (
-            <span className="flex items-center gap-1 text-blue-500">
+            <span className="flex items-center gap-1 text-blue-500 shrink-0">
               <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
               生成中...
             </span>
           ) : (
-            <span className="flex items-center gap-1 text-green-600">
+            <span className="flex items-center gap-1 text-green-600 shrink-0">
               <span className="w-2 h-2 rounded-full bg-green-500" />
               已完成
             </span>
           )}
+          {/* 当前模型信息 */}
+          <button
+            type="button"
+            onClick={onOpenSettings}
+            className="text-xs text-gray-500 hover:text-gray-800 truncate max-w-[200px] border border-gray-200 rounded px-2 py-0.5 hover:bg-gray-100 transition-colors"
+            title="点击修改模型配置"
+          >
+            {providerName} / {modelName}
+          </button>
         </div>
         <div className="flex items-center gap-1">
           <button

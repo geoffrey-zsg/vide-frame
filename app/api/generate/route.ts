@@ -15,7 +15,14 @@ export async function POST(request: Request) {
       )
     }
 
-    const provider = getLLMProvider(body.model, body.apiKey)
+    if (!body.apiKey) {
+      return NextResponse.json(
+        { error: 'API Key is required. Please configure it in settings.' },
+        { status: 400 }
+      )
+    }
+
+    const provider = getLLMProvider(body.provider, body.model, body.apiKey)
 
     const isIteration = body.history.length > 0
     const systemPrompt = buildSystemPrompt(body.style, isIteration)
