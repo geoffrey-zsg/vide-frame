@@ -54,9 +54,12 @@ export function PreviewPanel({
     return () => window.removeEventListener('message', handleMessage);
   }, [onElementClick]);
 
-  // Send full HTML to iframe when currentHTML changes
+  // Send full HTML to iframe when currentHTML changes, and clear any previous error
   useEffect(() => {
     if (!iframeReady || !currentHTML) return;
+    // Clearing previous render error before posting new HTML is intentional;
+    // this is not a cascading render but a coordinated state reset.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setRenderError(null);
     iframeRef.current?.contentWindow?.postMessage(
       { type: 'render', html: currentHTML },

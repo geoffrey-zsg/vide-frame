@@ -9,6 +9,18 @@ import {
 } from 'react';
 import type { Message } from '@/lib/types';
 
+// Compat interface for SpeechRecognition API (non-standard / vendor-prefixed)
+interface SpeechRecognitionCompat {
+  lang: string;
+  interimResults: boolean;
+  maxAlternatives: number;
+  onresult: ((event: Event) => void) | null;
+  onend: (() => void) | null;
+  onerror: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+}
+
 interface ChatAreaProps {
   messages: Message[];
   isGenerating: boolean;
@@ -19,7 +31,7 @@ export function ChatArea({ messages, isGenerating, onSend }: ChatAreaProps) {
   const [input, setInput] = useState('');
   const [isListening, setIsListening] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const recognitionRef = useRef<SpeechRecognitionCompat | null>(null);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -59,23 +71,28 @@ export function ChatArea({ messages, isGenerating, onSend }: ChatAreaProps) {
       return;
     }
 
-    const SpeechRecognitionCtor =
-      (window as unknown as { webkitSpeechRecognition?: typeof SpeechRecognition })
-        .webkitSpeechRecognition ?? window.SpeechRecognition;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const win = window as any;
+    const Ctor: (new () => SpeechRecognitionCompat) | undefined =
+      win.SpeechRecognition ?? win.webkitSpeechRecognition;
 
-    if (!SpeechRecognitionCtor) {
+    if (!Ctor) {
       alert('当前浏览器不支持语音识别');
       return;
     }
 
-    const recognition = new SpeechRecognitionCtor();
+    const recognition: SpeechRecognitionCompat = new Ctor();
     recognition.lang = 'zh-CN';
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
 
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
-      const transcript = event.results[0][0].transcript;
-      setInput((prev) => prev + transcript);
+    recognition.onresult = (event: Event) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const results = (event as any).results;
+      const transcript: string = results?.[0]?.[0]?.transcript ?? '';
+      if (transcript) {
+        setInput((prev) => prev + transcript);
+      }
     };
 
     recognition.onend = () => {
