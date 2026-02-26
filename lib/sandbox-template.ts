@@ -12,7 +12,7 @@ export function getSandboxTemplate(): string {
       cursor: pointer;
     }
     body {
-      margin: 0;
+      margin:0;
     }
     /* 加载动画 */
     .vf-loading {
@@ -43,32 +43,26 @@ export function getSandboxTemplate(): string {
     </div>
   </div>
   <script>
-    const root = document.getElementById('vf-root');
-    let chunks = '';
-    let renderTimer = null;
-    let isFirstChunk = true;
-    const RENDER_INTERVAL = 300; // 节流间隔：300ms
+    var root = document.getElementById('vf-root');
+    var chunks = '';
+    var renderTimer = null;
+    var isFirstChunk = true;
+    var RENDER_INTERVAL = 300;
 
-    // 检测 markdown 代码块标记（使用 Unicode 编码避免模板字符串转义问题）
-    const CODE_BLOCK_START = String.fromCharCode(96, 96, 96); // \`\`\`
-    const CODE_BLOCK_HTML = String.fromCharCode(96, 96, 96, 104, 116, 109, 108); // \`\`\`html
+    // 检测 markdown 代码块标记
+    var CODE_BLOCK_START = String.fromCharCode(96, 96, 96);
+    var CODE_BLOCK_HTML = String.fromCharCode(96, 96, 96, 104, 116, 109, 108);
 
-    // 解析 HTML 并提取 body 内容，容错处理不完整的 HTML
     function parseAndExtract(html) {
-      // 去除开头的 markdown 代码块标记
-      let content = html.trim();
+      var content = html.trim();
       if (content.startsWith(CODE_BLOCK_HTML)) {
         content = content.slice(CODE_BLOCK_HTML.length).trim();
       } else if (content.startsWith(CODE_BLOCK_START)) {
         content = content.slice(CODE_BLOCK_START.length).trim();
       }
-
-      // 去除结尾的代码块标记
       if (content.endsWith(CODE_BLOCK_START)) {
         content = content.slice(0, -CODE_BLOCK_START.length).trim();
       }
-
-      // 如果已经是完整的 HTML 文档，提取 body 内容
       if (content.includes('<body') || content.includes('<!DOCTYPE')) {
         try {
           var parser = new DOMParser();
@@ -81,36 +75,35 @@ export function getSandboxTemplate(): string {
       return content;
     }
 
-    // 安全地渲染 HTML，处理不完整片段
     function safeRender(html) {
       if (!html || !html.trim()) {
-        return;
+        return false;
       }
-
       try {
         var content = parseAndExtract(html);
-
         if (!content || !content.trim()) {
-          return;
+          return false;
         }
-
         root.innerHTML = content;
+        return true;
       } catch (err) {
         console.error('Render error:', err);
         parent.postMessage({ type: 'render-error', error: String(err) }, '*');
+        return false;
       }
     }
 
-    // 立即渲染当前累积的 chunks
     function renderNow() {
       if (renderTimer) {
         clearTimeout(renderTimer);
         renderTimer = null;
       }
-      safeRender(chunks);
+      var success = safeRender(chunks);
+      if (success) {
+        parent.postMessage({ type: 'render-success' }, '*');
+      }
     }
 
-    // 延迟渲染：若已有计时器则跳过，否则启动新计时器
     function scheduleRender() {
       if (renderTimer) return;
       renderTimer = setTimeout(renderNow, RENDER_INTERVAL);
@@ -122,7 +115,6 @@ export function getSandboxTemplate(): string {
 
       switch (msg.type) {
         case 'render':
-          // 完整渲染：重置状态
           chunks = msg.html || '';
           isFirstChunk = true;
           renderNow();
@@ -131,7 +123,6 @@ export function getSandboxTemplate(): string {
         case 'render-chunk':
           chunks += msg.chunk;
           if (isFirstChunk) {
-            // 首个 chunk 立即渲染，避免用户感觉卡顿
             isFirstChunk = false;
             renderNow();
           } else {
@@ -140,14 +131,12 @@ export function getSandboxTemplate(): string {
           break;
 
         case 'render-complete':
-          // 渲染完成：重置状态并确保最终渲染
           isFirstChunk = true;
           renderNow();
           break;
       }
     });
 
-    // 通知父窗口 iframe 已准备好
     parent.postMessage({ type: 'ready' }, '*');
   <\/script>
 </body>

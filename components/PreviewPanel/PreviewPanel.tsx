@@ -37,6 +37,9 @@ export function PreviewPanel({
         setIframeReady(true);
       } else if (msg.type === 'render-error') {
         setRenderError(msg.error);
+      } else if (msg.type === 'render-success') {
+        // 渲染成功时清除错误
+        setRenderError(null);
       }
     }
 
@@ -44,15 +47,12 @@ export function PreviewPanel({
     return () => window.removeEventListener('message', handleMessage);
   }, []);
 
-  // 当 currentHTML 变化时发送给 iframe，并清除错误
+  // 发送 HTML 到 iframe
   useEffect(() => {
     if (!iframeReady) return;
 
     const iframe = iframeRef.current;
     if (!iframe?.contentWindow) return;
-
-    // 清除之前的错误（使用函数式更新避免依赖 renderError）
-    setRenderError((prev) => (prev ? null : prev));
 
     iframe.contentWindow.postMessage(
       { type: 'render', html: currentHTML || '' },
