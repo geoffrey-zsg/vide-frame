@@ -15,7 +15,6 @@ declare global {
 interface PreviewPanelProps {
   isGenerating: boolean;
   currentHTML: string | null;
-  onElementClick: (info: ElementInfo) => void;
   onExport: () => void;
   onRefresh: () => void;
   providerName: string;
@@ -26,7 +25,6 @@ interface PreviewPanelProps {
 export function PreviewPanel({
   isGenerating,
   currentHTML,
-  onElementClick,
   onExport,
   onRefresh,
   providerName,
@@ -50,23 +48,30 @@ export function PreviewPanel({
         case 'render-error':
           setRenderError(msg.error);
           break;
-        case 'element-clicked':
-          onElementClick(msg.elementInfo);
-          break;
       }
     }
 
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [onElementClick]);
+  }, []);
 
   // Send full HTML to iframe when currentHTML changes, and clear any previous error
   useEffect(() => {
-    if (!iframeReady || !currentHTML) return;
+    if (!iframeReady) return;
+    
     // Clearing previous render error before posting new HTML is intentional;
     // this is not a cascading render but a coordinated state reset.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setRenderError(null);
+    
+    if (!currentHTML) {
+      iframeRef.current?.contentWindow?.postMessage(
+        { type: 'render', html: '' },
+        '*'
+      );
+      return;
+    }
+
     iframeRef.current?.contentWindow?.postMessage(
       { type: 'render', html: currentHTML },
       '*'

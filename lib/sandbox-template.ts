@@ -78,56 +78,8 @@ export function getSandboxTemplate(): string {
           isFirstChunk = true;
           renderNow();
           break;
-
-        case 'highlight':
-          clearHighlight();
-          const target = document.querySelector(msg.selector);
-          if (target) {
-            target.classList.add('vf-highlight');
-            highlightedEl = target;
-          }
-          break;
-
-        case 'clear-highlight':
-          clearHighlight();
-          break;
       }
     });
-
-    document.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-
-      const el = e.target;
-      if (!el || el === root) return;
-
-      const tagName = el.tagName.toLowerCase();
-      const textContent = (el.textContent || '').trim().slice(0, 50);
-      const className = el.className
-        .toString()
-        .replace(/vf-highlight/g, '')
-        .trim();
-
-      let positionDescription = tagName;
-      const parentEl = el.parentElement;
-      if (parentEl) {
-        const parentTag = parentEl.tagName.toLowerCase();
-        const siblings = Array.from(parentEl.children).filter(
-          (c) => c.tagName.toLowerCase() === tagName
-        );
-        if (siblings.length > 1) {
-          const index = siblings.indexOf(el) + 1;
-          positionDescription = parentTag + ' 中的第 ' + index + ' 个 ' + tagName;
-        } else {
-          positionDescription = parentTag + ' 中的 ' + tagName;
-        }
-      }
-
-      parent.postMessage({
-        type: 'element-clicked',
-        elementInfo: { tagName, textContent, className, positionDescription }
-      }, '*');
-    }, true);
 
     parent.postMessage({ type: 'ready' }, '*');
   <\/script>

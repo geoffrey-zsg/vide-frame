@@ -278,11 +278,6 @@ export default function Home() {
     [isGenerating, image, messages, style, settings, currentSessionId, currentHTML, autoSaveSession],
   );
 
-  const handleElementClick = useCallback((info: ElementInfo) => {
-    const desc = `[${info.positionDescription}] "${info.textContent}"`;
-    window.dispatchEvent(new CustomEvent('fill-input', { detail: desc }));
-  }, []);
-
   const handleExport = useCallback(async () => {
     if (!currentHTML) return;
     try {
@@ -325,6 +320,7 @@ export default function Home() {
             messages={messages}
             isGenerating={isGenerating}
             onSend={handleSend}
+            onPreviewHTML={setCurrentHTML}
             sessions={sessions}
             currentSessionId={currentSessionId}
             onSelectSession={handleSelectSession}
@@ -336,7 +332,6 @@ export default function Home() {
           <PreviewPanel
             isGenerating={isGenerating}
             currentHTML={currentHTML}
-            onElementClick={handleElementClick}
             onExport={handleExport}
             onRefresh={handleRefresh}
             providerName={providerName}

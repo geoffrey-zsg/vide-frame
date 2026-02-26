@@ -4,13 +4,14 @@ import { useState, useCallback } from 'react';
 
 interface CollapsibleCodeProps {
   code: string;
+  onPreview: (code: string) => void;
 }
 
 /**
  * 可折叠代码块组件
  * 默认折叠状态，显示摘要信息；可展开查看完整代码；支持一键复制。
  */
-export function CollapsibleCode({ code }: CollapsibleCodeProps) {
+export function CollapsibleCode({ code, onPreview }: CollapsibleCodeProps) {
   const [expanded, setExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -39,13 +40,22 @@ export function CollapsibleCode({ code }: CollapsibleCodeProps) {
           <span>生成了 HTML 代码</span>
           <span className="text-gray-400">({code.length} 字符)</span>
         </button>
-        <button
-          type="button"
-          onClick={handleCopy}
-          className="text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-800 transition-colors"
-        >
-          {copied ? '已复制' : '复制代码'}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => onPreview(code)}
+            className="text-xs px-2 py-0.5 rounded bg-indigo-50 text-indigo-600 hover:bg-indigo-100 hover:text-indigo-700 transition-colors border border-indigo-100"
+          >
+            预览
+          </button>
+          <button
+            type="button"
+            onClick={handleCopy}
+            className="text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-800 transition-colors"
+          >
+            {copied ? '已复制' : '复制代码'}
+          </button>
+        </div>
       </div>
 
       {/* 代码内容（展开时显示） */}

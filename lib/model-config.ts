@@ -20,43 +20,13 @@ export interface ProviderConfig {
 
 export const PROVIDER_CONFIGS: ProviderConfig[] = [
   {
-    id: 'qwen',
-    name: '通义千问',
-    models: [
-      { id: 'qwen-vl-max', name: '千问 VL Max', supportsVision: true },
-      { id: 'qwen-vl-plus', name: '千问 VL Plus', supportsVision: true },
-    ],
-  },
-  {
-    id: 'deepseek',
-    name: 'DeepSeek',
-    models: [
-      { id: 'deepseek-chat', name: 'DeepSeek V3', supportsVision: false },
-    ],
-  },
-  {
-    id: 'openai',
-    name: 'OpenAI',
-    models: [
-      { id: 'gpt-4o', name: 'GPT-4o', supportsVision: true },
-      { id: 'gpt-4o-mini', name: 'GPT-4o Mini', supportsVision: true },
-    ],
-  },
-  {
-    id: 'anthropic',
-    name: 'Anthropic',
-    models: [
-      { id: 'claude-sonnet-4-20250514', name: 'Claude Sonnet 4', supportsVision: true },
-    ],
-  },
-  {
     id: 'openrouter',
     name: 'OpenRouter',
     models: [
-      { id: 'qwen/qwen-2.5-vl-72b-instruct', name: 'Qwen VL 72B', supportsVision: true },
-      { id: 'openai/gpt-4o', name: 'GPT-4o', supportsVision: true },
-      { id: 'anthropic/claude-sonnet-4-20250514', name: 'Claude Sonnet 4', supportsVision: true },
-      { id: 'deepseek/deepseek-chat-v3-0324', name: 'DeepSeek V3', supportsVision: false },
+      { id: 'google/gemini-3.1-pro-preview', name: 'gemini-3.1-pro-preview', supportsVision: true },
+      { id: 'minimax/minimax-m2.5', name: 'minimax-m2.5', supportsVision: true },
+      { id: 'moonshotai/kimi-k2.5', name: 'kimi-k2.5', supportsVision: true },
+      { id: 'anthropic/claude-opus-4.6', name: 'claude-opus-4.6', supportsVision: true },
     ],
   },
 ]

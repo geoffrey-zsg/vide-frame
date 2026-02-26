@@ -14,6 +14,7 @@ interface InputPanelProps {
   messages: Message[];
   isGenerating: boolean;
   onSend: (text: string) => void;
+  onPreviewHTML: (html: string) => void;
   sessions: Session[];
   currentSessionId: string | null;
   onSelectSession: (session: Session) => void;
@@ -29,6 +30,7 @@ export function InputPanel({
   messages,
   isGenerating,
   onSend,
+  onPreviewHTML,
   sessions,
   currentSessionId,
   onSelectSession,
@@ -72,6 +74,7 @@ export function InputPanel({
         messages={messages}
         isGenerating={isGenerating}
         onSend={onSend}
+        onPreviewHTML={onPreviewHTML}
       />
     </div>
   );

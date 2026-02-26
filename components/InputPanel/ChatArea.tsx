@@ -4,7 +4,6 @@ import {
   useState,
   useRef,
   useEffect,
-  useCallback,
   type KeyboardEvent,
 } from 'react';
 import type { Message } from '@/lib/types';
@@ -17,46 +16,21 @@ function isHTMLContent(msg: Message): boolean {
   return trimmed.startsWith('<') || trimmed.startsWith('<!DOCTYPE');
 }
 
-// Compat interface for SpeechRecognition API (non-standard / vendor-prefixed)
-interface SpeechRecognitionCompat {
-  lang: string;
-  interimResults: boolean;
-  maxAlternatives: number;
-  onresult: ((event: Event) => void) | null;
-  onend: (() => void) | null;
-  onerror: (() => void) | null;
-  start: () => void;
-  stop: () => void;
-}
-
 interface ChatAreaProps {
   messages: Message[];
   isGenerating: boolean;
   onSend: (text: string) => void;
+  onPreviewHTML: (html: string) => void;
 }
 
-export function ChatArea({ messages, isGenerating, onSend }: ChatAreaProps) {
+export function ChatArea({ messages, isGenerating, onSend, onPreviewHTML }: ChatAreaProps) {
   const [input, setInput] = useState('');
-  const [isListening, setIsListening] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const recognitionRef = useRef<SpeechRecognitionCompat | null>(null);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
-
-  // Listen for 'fill-input' custom event
-  useEffect(() => {
-    function handleFillInput(e: Event) {
-      const detail = (e as CustomEvent<string>).detail;
-      if (detail) {
-        setInput((prev) => prev + detail);
-      }
-    }
-    window.addEventListener('fill-input', handleFillInput);
-    return () => window.removeEventListener('fill-input', handleFillInput);
-  }, []);
 
   function handleSend() {
     const trimmed = input.trim();
@@ -71,52 +45,6 @@ export function ChatArea({ messages, isGenerating, onSend }: ChatAreaProps) {
       handleSend();
     }
   }
-
-  const toggleVoice = useCallback(() => {
-    if (isListening && recognitionRef.current) {
-      recognitionRef.current.stop();
-      setIsListening(false);
-      return;
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const win = window as any;
-    const Ctor: (new () => SpeechRecognitionCompat) | undefined =
-      win.SpeechRecognition ?? win.webkitSpeechRecognition;
-
-    if (!Ctor) {
-      alert('当前浏览器不支持语音识别');
-      return;
-    }
-
-    const recognition: SpeechRecognitionCompat = new Ctor();
-    recognition.lang = 'zh-CN';
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
-
-    recognition.onresult = (event: Event) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const results = (event as any).results;
-      const transcript: string = results?.[0]?.[0]?.transcript ?? '';
-      if (transcript) {
-        setInput((prev) => prev + transcript);
-      }
-    };
-
-    recognition.onend = () => {
-      setIsListening(false);
-      recognitionRef.current = null;
-    };
-
-    recognition.onerror = () => {
-      setIsListening(false);
-      recognitionRef.current = null;
-    };
-
-    recognitionRef.current = recognition;
-    recognition.start();
-    setIsListening(true);
-  }, [isListening]);
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
@@ -137,7 +65,7 @@ export function ChatArea({ messages, isGenerating, onSend }: ChatAreaProps) {
               }`}
             >
               {isHTMLContent(msg) ? (
-                <CollapsibleCode code={msg.content} />
+                <CollapsibleCode code={msg.content} onPreview={onPreviewHTML} />
               ) : (
                 <span className="whitespace-pre-wrap">{msg.content}</span>
               )}
@@ -163,22 +91,6 @@ export function ChatArea({ messages, isGenerating, onSend }: ChatAreaProps) {
             }}
           />
           <div className="flex items-center gap-1.5 pb-1 pr-1">
-            {/* Microphone button */}
-            <button
-              type="button"
-              onClick={toggleVoice}
-              className={`flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-xl transition-all duration-200 ${
-                isListening
-                  ? 'bg-red-50 text-red-500 hover:bg-red-100'
-                  : 'text-slate-400 hover:bg-slate-100 hover:text-slate-600'
-              }`}
-              aria-label={isListening ? 'Stop voice input' : 'Start voice input'}
-            >
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V5z" />
-                <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
-              </svg>
-            </button>
             {/* Send button */}
             <button
               type="button"
