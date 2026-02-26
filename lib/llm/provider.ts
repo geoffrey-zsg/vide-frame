@@ -1,35 +1,36 @@
 import type { LLMProvider } from '../types'
-import type { ProviderId } from '../model-config'
 import { OpenAIProvider } from './openai'
-import { ClaudeProvider } from './claude'
-import { QwenProvider } from './qwen'
-import { OpenRouterProvider } from './openrouter'
 
 /**
- * 根据 provider 类型 + model + apiKey 创建 LLM Provider 实例。
- * 不再依赖服务端环境变量，完全由客户端传入参数驱动。
+ * 根据 provider 类型 + baseUrl + model + apiKey 创建 LLM Provider 实例。
+ * 支持任意 OpenAI Compatible API 服务。
  */
 export function getLLMProvider(
-  provider: ProviderId,
+  provider: string,
   model: string,
   apiKey: string,
+  baseUrl?: string,
 ): LLMProvider {
   if (!apiKey) {
     throw new Error('API Key 是必填项，请在设置中配置。')
   }
 
-  switch (provider) {
-    case 'openai':
-      return new OpenAIProvider(apiKey, undefined, model, 'OpenAI')
-    case 'anthropic':
-      return new ClaudeProvider(apiKey, model)
-    case 'qwen':
-      return new QwenProvider(apiKey, model)
-    case 'deepseek':
-      return new OpenAIProvider(apiKey, 'https://api.deepseek.com/v1', model, 'DeepSeek')
-    case 'openrouter':
-      return new OpenRouterProvider(apiKey, model, model)
-    default:
-      throw new Error(`未知的 Provider: ${provider}`)
+  if (!model) {
+    throw new Error('模型 ID 是必填项，请在设置中配置。')
   }
+
+  // 所有 provider 都使用 OpenAI Compatible API
+  // 预设 provider 的 baseUrl
+  const providerBaseUrls: Record<string, string | undefined> = {
+    openai: undefined, // 使用默认 https://api.openai.com/v1
+    deepseek: 'https://api.deepseek.com/v1',
+    openrouter: 'https://openrouter.ai/api/v1',
+  }
+
+  // 优先使用用户自定义的 baseUrl，否则使用预设
+  const effectiveBaseUrl = baseUrl || providerBaseUrls[provider]
+
+  const displayName = provider === 'openai-compatible' ? 'Custom' : provider
+
+  return new OpenAIProvider(apiKey, effectiveBaseUrl, model, displayName)
 }

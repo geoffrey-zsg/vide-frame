@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { PROVIDER_CONFIGS } from '@/lib/model-config';
-import type { ProviderId } from '@/lib/model-config';
+import { PROVIDER_PRESETS } from '@/lib/model-config';
+import type { ProviderType } from '@/lib/model-config';
 import type { UserSettings } from '@/lib/types';
 
 interface SettingsDialogProps {
@@ -26,19 +26,16 @@ export function SettingsDialog({
 
   if (!isOpen) return null;
 
-  // 当前选中的 provider 配置
-  const currentProvider = PROVIDER_CONFIGS.find(
-    (p) => p.id === localSettings.provider,
-  );
+  // 是否需要显示 Base URL 输入框
+  const showBaseUrlInput = localSettings.provider === 'openai-compatible';
 
   const handleProviderChange = (providerId: string) => {
-    const provider = PROVIDER_CONFIGS.find((p) => p.id === providerId);
-    if (!provider) return;
-    // 切换 provider 时自动选中该 provider 的第一个 model
+    const preset = PROVIDER_PRESETS.find((p) => p.id === providerId);
     setLocalSettings({
       ...localSettings,
-      provider: providerId as ProviderId,
-      model: provider.models[0]?.id ?? '',
+      provider: providerId as ProviderType,
+      // 如果是预设 provider，自动填充默认 baseUrl
+      baseUrl: preset?.defaultBaseUrl ?? '',
     });
   };
 
@@ -46,6 +43,8 @@ export function SettingsDialog({
     onSave(localSettings);
     onClose();
   };
+
+  const isValid = localSettings.apiKey.trim() && localSettings.model.trim();
 
   return (
     <div
@@ -61,44 +60,44 @@ export function SettingsDialog({
         {/* Provider 选择 */}
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Provider
+            API Provider
           </label>
           <select
             value={localSettings.provider}
             onChange={(e) => handleProviderChange(e.target.value)}
             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
-            {PROVIDER_CONFIGS.map((provider) => (
-              <option key={provider.id} value={provider.id}>
-                {provider.name}
+            {PROVIDER_PRESETS.map((preset) => (
+              <option key={preset.id} value={preset.id}>
+                {preset.name}
               </option>
             ))}
           </select>
         </div>
 
-        {/* Model 选择（联动 Provider） */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            模型
-          </label>
-          <select
-            value={localSettings.model}
-            onChange={(e) =>
-              setLocalSettings({ ...localSettings, model: e.target.value })
-            }
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          >
-            {currentProvider?.models.map((model) => (
-              <option key={model.id} value={model.id}>
-                {model.name}
-                {model.supportsVision ? '' : ' (不支持图片)'}
-              </option>
-            ))}
-          </select>
-        </div>
+        {/* Base URL（仅 OpenAI Compatible 需要填写） */}
+        {showBaseUrlInput && (
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Base URL
+            </label>
+            <input
+              type="url"
+              value={localSettings.baseUrl}
+              onChange={(e) =>
+                setLocalSettings({ ...localSettings, baseUrl: e.target.value })
+              }
+              placeholder="https://api.example.com/v1"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              输入兼容 OpenAI API 的服务端点地址
+            </p>
+          </div>
+        )}
 
         {/* API Key 输入 */}
-        <div className="mb-6">
+        <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-1">
             API Key
           </label>
@@ -108,11 +107,34 @@ export function SettingsDialog({
             onChange={(e) =>
               setLocalSettings({ ...localSettings, apiKey: e.target.value })
             }
-            placeholder="输入对应 Provider 的 API Key"
+            placeholder="sk-..."
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          />
+        </div>
+
+        {/* Model ID 输入 */}
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Model ID
+          </label>
+          <input
+            type="text"
+            value={localSettings.model}
+            onChange={(e) =>
+              setLocalSettings({ ...localSettings, model: e.target.value })
+            }
+            placeholder="gpt-4o、qwen3-coder-plus 等"
             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
           <p className="mt-1 text-xs text-gray-500">
-            API Key 仅存储在浏览器本地，不会上传至服务端存储。
+            输入模型标识符，如 gpt-4o、claude-3-5-sonnet、qwen3-coder-plus
+          </p>
+        </div>
+
+        {/* 提示信息 */}
+        <div className="mb-6 p-3 bg-gray-50 rounded-lg">
+          <p className="text-xs text-gray-600">
+            API Key 仅存储在浏览器本地，不会上传至服务端。
           </p>
         </div>
 
@@ -121,15 +143,15 @@ export function SettingsDialog({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+            className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
           >
             取消
           </button>
           <button
             type="button"
             onClick={handleSave}
-            disabled={!localSettings.apiKey.trim()}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            disabled={!isValid}
+            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
           >
             保存
           </button>

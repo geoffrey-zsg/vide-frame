@@ -1,7 +1,5 @@
 // VibeFrame 核心类型定义
 
-import type { ProviderId } from './model-config'
-
 export interface Message {
   role: 'user' | 'assistant';
   content: string;
@@ -37,9 +35,14 @@ export interface StylePreset {
 
 /** 用户设置（持久化到 localStorage） */
 export interface UserSettings {
-  provider: ProviderId;
-  model: string;
+  /** API Provider 类型 */
+  provider: string;
+  /** 自定义 Base URL（可选，用于 OpenAI Compatible 服务） */
+  baseUrl: string;
+  /** API Key */
   apiKey: string;
+  /** 模型 ID */
+  model: string;
 }
 
 /** 前端 → /api/generate 的请求体 */
@@ -48,7 +51,8 @@ export interface GenerateRequest {
   prompt: string;
   style: StyleId;
   history: Message[];
-  provider: ProviderId;
+  provider: string;
+  baseUrl?: string;
   model: string;
   apiKey: string;
   elementContext?: string;

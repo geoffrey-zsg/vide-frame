@@ -22,7 +22,14 @@ export async function POST(request: Request) {
       )
     }
 
-    const provider = getLLMProvider(body.provider, body.model, body.apiKey)
+    if (!body.model) {
+      return NextResponse.json(
+        { error: 'Model ID is required. Please configure it in settings.' },
+        { status: 400 }
+      )
+    }
+
+    const provider = getLLMProvider(body.provider, body.model, body.apiKey, body.baseUrl)
 
     const isIteration = body.history.length > 0
     const systemPrompt = buildSystemPrompt(body.style, isIteration)

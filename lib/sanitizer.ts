@@ -4,6 +4,7 @@
 // - Whitelisted CDN domains for external scripts: cdn.tailwindcss.com, unpkg.com, cdn.jsdelivr.net
 // - External <script src="...">: keep if src matches whitelist, remove otherwise
 // - Inline <script>: replace dangerous API calls with blocked comments, remove tag if nothing remains
+// - Strip markdown code block markers (```html, ```)
 // - All other HTML (tags, attributes, inline events, CSS) is preserved as-is
 
 const WHITELISTED_CDNS = [
@@ -24,6 +25,22 @@ const DANGEROUS_PATTERNS: RegExp[] = [
   /\bsessionStorage\b/g,
   /\bwindow\.open\s*\(/g,
 ];
+
+/**
+ * Strip markdown code block markers from HTML content.
+ * Handles: ```html, ```HTML, ``` at start/end
+ */
+function stripMarkdownCodeBlocks(html: string): string {
+  let result = html.trim();
+
+  // Remove leading code block markers (```html, ```HTML, ```)
+  result = result.replace(/^```(?:html|HTML)?\s*\n?/i, '');
+
+  // Remove trailing code block markers
+  result = result.replace(/\n?```\s*$/i, '');
+
+  return result.trim();
+}
 
 function isWhitelistedSrc(src: string): boolean {
   try {
@@ -52,7 +69,11 @@ function isOnlyBlocked(content: string): boolean {
 }
 
 export function sanitizeHTML(html: string): string {
-  const result = html.replace(
+  // First, strip any markdown code block markers
+  let result = stripMarkdownCodeBlocks(html);
+
+  // Then sanitize scripts
+  result = result.replace(
     /<script\b([^>]*)>([\s\S]*?)<\/script>/gi,
     (match, attributes: string, content: string) => {
       const srcMatch = attributes.match(/\bsrc\s*=\s*["']([^"']*)["']/i);

@@ -5,7 +5,7 @@ import { SplitPane } from '@/components/SplitPane';
 import { InputPanel } from '@/components/InputPanel';
 import { PreviewPanel } from '@/components/PreviewPanel';
 import { SettingsDialog } from '@/components/SettingsDialog';
-import { PROVIDER_CONFIGS } from '@/lib/model-config';
+import { PROVIDER_PRESETS } from '@/lib/model-config';
 import {
   loadSessions,
   saveSession,
@@ -25,20 +25,20 @@ declare global {
 
 const SETTINGS_KEY = 'vibeframe_settings';
 
-// 默认设置：第一个 provider 的第一个 model
+// 默认设置
 const DEFAULT_SETTINGS: UserSettings = {
-  provider: PROVIDER_CONFIGS[0].id,
-  model: PROVIDER_CONFIGS[0].models[0].id,
+  provider: 'openai-compatible',
+  baseUrl: '',
   apiKey: '',
+  model: '',
 };
 
-/** 根据 provider/model ID 获取显示名称 */
+/** 根据 settings 获取显示名称 */
 function getDisplayNames(settings: UserSettings) {
-  const provider = PROVIDER_CONFIGS.find((p) => p.id === settings.provider);
-  const model = provider?.models.find((m) => m.id === settings.model);
+  const preset = PROVIDER_PRESETS.find((p) => p.id === settings.provider);
   return {
-    providerName: provider?.name ?? settings.provider,
-    modelName: model?.name ?? settings.model,
+    providerName: preset?.name ?? settings.provider,
+    modelName: settings.model || '未配置',
   };
 }
 
@@ -191,8 +191,6 @@ export default function Home() {
       const updatedMessages = [...messages, userMessage];
       setMessages(updatedMessages);
 
-      const sendChunk = window.__vibeframe_sendChunk;
-      const sendComplete = window.__vibeframe_sendComplete;
       let fullHTML = '';
 
       try {
@@ -205,6 +203,7 @@ export default function Home() {
             style,
             history: messages,
             provider: settings.provider,
+            baseUrl: settings.baseUrl,
             model: settings.model,
             apiKey: settings.apiKey,
           }),
@@ -237,9 +236,10 @@ export default function Home() {
               if (data.error) {
                 throw new Error(data.error);
               }
+              // 每次调用时从 window 重新获取，避免闭包捕获 iframeReady=false 的旧函数
               if (data.chunk) {
                 fullHTML += data.chunk;
-                sendChunk?.(data.chunk);
+                window.__vibeframe_sendChunk?.(data.chunk);
               }
               if (data.done && data.html) {
                 fullHTML = data.html;
@@ -254,7 +254,7 @@ export default function Home() {
 
         const finalMessages = [...updatedMessages, { role: 'assistant' as const, content: fullHTML }];
         setMessages(finalMessages);
-        sendComplete?.();
+        window.__vibeframe_sendComplete?.();
 
         // 自动保存会话
         autoSaveSession(finalMessages, fullHTML, currentSessionId, style);

@@ -70,4 +70,41 @@ describe('sanitizeHTML', () => {
     const result = sanitizeHTML(input);
     expect(result).not.toContain('WebSocket');
   });
+
+  // Markdown code block stripping tests
+  it('should strip leading ```html code block marker', () => {
+    const input = '```html\n<!DOCTYPE html><html><body>Hello</body></html>';
+    const result = sanitizeHTML(input);
+    expect(result).not.toContain('```');
+    expect(result).toContain('<!DOCTYPE html>');
+  });
+
+  it('should strip leading ```HTML code block marker (uppercase)', () => {
+    const input = '```HTML\n<!DOCTYPE html><html><body>Hello</body></html>';
+    const result = sanitizeHTML(input);
+    expect(result).not.toContain('```');
+    expect(result).toContain('<!DOCTYPE html>');
+  });
+
+  it('should strip trailing ``` code block marker', () => {
+    const input = '<!DOCTYPE html><html><body>Hello</body></html>\n```';
+    const result = sanitizeHTML(input);
+    expect(result).not.toContain('```');
+    expect(result).toContain('</html>');
+  });
+
+  it('should strip both leading and trailing code block markers', () => {
+    const input = '```html\n<!DOCTYPE html><html><body>Hello</body></html>\n```';
+    const result = sanitizeHTML(input);
+    expect(result).not.toContain('```');
+    expect(result).toContain('<!DOCTYPE html>');
+    expect(result).toContain('</html>');
+  });
+
+  it('should handle code block without language identifier', () => {
+    const input = '```\n<!DOCTYPE html><html><body>Hello</body></html>\n```';
+    const result = sanitizeHTML(input);
+    expect(result).not.toContain('```');
+    expect(result).toContain('<!DOCTYPE html>');
+  });
 });
