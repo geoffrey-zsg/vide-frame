@@ -1,14 +1,21 @@
 # VibeFrame 实施计划
 
+> **状态：** ✅ 已完成（2026-02-26）
+>
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **目标：** 构建一个交互式线框图生成器，通过 LLM 多模态能力将草图/文字描述转换为可交互的 Web 页面。
 
-**架构：** Next.js 全栈单页应用。左侧输入面板 + 右侧 iframe 预览沙箱。API Routes 做 LLM 流式代理。三个 LLM 适配器（OpenAI / Claude / 通义千问）共享统一 Provider 接口。生成的 HTML 经清洗后通过 postMessage 注入 iframe 渲染。
+**架构：** Next.js 全栈单页应用。左侧输入面板 + 右侧 iframe 预览沙箱。API Routes 做 LLM 流式代理。统一使用 OpenAI Compatible Provider 接口。生成的 HTML 经清洗后通过 postMessage 注入 iframe 渲染。
 
-**技术栈：** Next.js 14+ (App Router)、TypeScript、TailwindCSS、Vitest
+**技术栈：** Next.js 16 (App Router)、React 19、TypeScript 5、Tailwind CSS 4、Vitest 4
 
 **设计文档：** `docs/plans/2026-02-14-vibeframe-design.md`
+
+**实施变更说明：**
+- LLM Provider 从多适配器改为统一 OpenAI Compatible API
+- 新增会话管理功能（localStorage 持久化）
+- 新增全屏预览功能
 
 ---
 

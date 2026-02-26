@@ -8,12 +8,17 @@
 
 ## 二、技术栈
 
-| 层级 | 技术选型 | 说明 |
-|------|---------|------|
-| 框架 | Next.js 14+ (App Router) | 前后端合一，API Routes 替代独立 BFF |
-| 语言 | TypeScript | 全栈统一，类型安全 |
-| 样式 | TailwindCSS | 主应用样式 + iframe 沙箱内生成代码样式 |
-| 部署 | Docker + Nginx | 容器化部署，Nginx 反向代理 |
+| 层级 | 技术选型 | 版本 | 说明 |
+|------|---------|------|------|
+| 框架 | Next.js (App Router) | 16.x | 前后端合一，API Routes 替代独立 BFF |
+| UI 框架 | React | 19.x | 最新版本，支持 Ref 简化等特性 |
+| 语言 | TypeScript | 5.x (strict) | 全栈统一，类型安全 |
+| 样式 | Tailwind CSS | 4.x | 主应用样式 + iframe 沙箱内生成代码样式 |
+| 测试 | Vitest + Testing Library | 4.x | 单元测试 + 组件测试 |
+| Lint | ESLint | 9.x (flat config) | 代码质量检查 |
+| 包管理 | pnpm | 10.x | 快速、节省磁盘空间 |
+| LLM SDK | openai | 6.x | 支持 OpenAI Compatible API |
+| 部署 | Docker + Nginx | - | 容器化部署，Nginx 反向代理 |
 
 **选型理由：**
 - Next.js 将前端页面和 API 代理层合为一个项目，无需 Monorepo，结构简单
@@ -23,45 +28,52 @@
 
 ## 三、支持的 LLM 模型
 
-通过统一抽象层支持多模型切换，优先适配以下三类：
+> **实际实现更新：** 采用统一 OpenAI Compatible API 接口，而非独立适配器。详见下文"模型抽象层设计"。
 
-| 模型 | 用途 | SDK |
-|------|------|-----|
-| OpenAI GPT-4o | 多模态（图像+文字）代码生成 | openai |
-| Anthropic Claude Sonnet | 高质量代码生成 | @anthropic-ai/sdk |
-| 通义千问 VL | 国内网络友好的多模态方案 | dashscope / HTTP API |
+通过统一抽象层支持多模型切换：
 
-API Key 管理策略：默认使用服务端环境变量配置的 Key，用户也可在设置面板中填入自己的 Key 进行覆盖。
+| 模型 | 用途 | 接入方式 |
+|------|------|---------|
+| OpenAI GPT-4o | 多模态（图像+文字）代码生成 | OpenAI API |
+| DeepSeek V3 | 国内网络友好的高质量代码生成 | OpenAI Compatible API |
+| OpenRouter | 统一网关，支持多种模型 | OpenAI Compatible API |
+| 自定义模型 | 用户自定义 OpenAI Compatible 服务 | 用户配置 Base URL |
+
+API Key 管理策略：用户在设置面板中配置自己的 API Key 和可选的 Base URL。
 
 ## 四、项目结构
+
+> **实际实现更新：** 以下为最新项目结构，已包含会话管理等功能。
 
 ```
 vibe-frame/
 ├── app/
 │   ├── layout.tsx              # 根布局
-│   ├── page.tsx                # 主页面（整个应用就这一个页面）
+│   ├── page.tsx                # 主页面
 │   ├── api/
 │   │   ├── generate/route.ts   # LLM 代码生成接口（流式 SSE）
-│   │   ├── models/route.ts     # 获取可用模型列表
-│   │   └── export/route.ts     # 导出 HTML 接口
+│   │   └── export/route.ts    # 导出 HTML 接口
 │   └── globals.css             # 全局样式 + Tailwind
 ├── components/
 │   ├── InputPanel/             # 左侧面板（图片上传 + 文字输入 + 对话历史）
-│   ├── PreviewPanel/           # 右侧预览沙箱（iframe + 骨架屏 + 刷新按钮）
+│   ├── PreviewPanel/           # 右侧预览沙箱（iframe + 骨架屏 + 全屏）
 │   ├── SplitPane/              # 可拖拽分割线容器
 │   ├── StyleSelector/          # 风格预设选择器
+│   ├── SessionList/            # 会话历史列表
 │   └── SettingsDialog/         # API Key 设置弹窗
 ├── lib/
 │   ├── llm/
-│   │   ├── provider.ts         # 模型抽象层接口定义
-│   │   ├── openai.ts           # OpenAI GPT-4o 适配器
-│   │   ├── claude.ts           # Claude Sonnet 适配器
-│   │   └── qwen.ts             # 通义千问适配器
+│   │   ├── provider.ts         # LLM Provider 工厂函数
+│   │   └── openai.ts           # OpenAI Compatible 适配器（统一实现）
 │   ├── prompt/
 │   │   ├── assembler.ts        # Prompt 组装器
 │   │   └── templates.ts        # 各风格的 Prompt 模板
-│   ├── sanitizer.ts            # 代码清洗器
-│   └── styles.ts               # 风格预设配置
+│   ├── sanitizer.ts             # HTML 清洗器（安全）
+│   ├── sandbox-template.ts     # iframe 沙箱模板
+│   ├── session-storage.ts      # 会话持久化
+│   ├── model-config.ts         # 模型配置
+│   ├── styles.ts               # 风格预设配置
+│   └── types.ts                # 类型定义
 ├── public/
 ├── .env.local                  # 本地环境变量（API Keys）
 ├── Dockerfile
@@ -134,7 +146,9 @@ vibe-frame/
 
 ## 七、模型抽象层设计
 
-### 统一接口定义
+> **实际实现更新：** 采用统一 OpenAI Compatible API 接口，而非独立适配器。
+
+### 统一接口设计
 
 ```typescript
 interface LLMProvider {
@@ -154,7 +168,48 @@ interface Message {
 }
 ```
 
-三个适配器（OpenAI、Claude、Qwen）各自实现此接口，调用方无需关心底层差异。
+### 工厂函数实现
+
+```typescript
+// lib/llm/provider.ts
+export function getLLMProvider(
+  provider: string,
+  model: string,
+  apiKey: string,
+  baseUrl?: string,
+): LLMProvider {
+  // 预设 provider 的 baseUrl
+  const providerBaseUrls: Record<string, string | undefined> = {
+    openai: undefined,
+    deepseek: 'https://api.deepseek.com/v1',
+    openrouter: 'https://openrouter.ai/api/v1',
+  };
+
+  const effectiveBaseUrl = baseUrl || providerBaseUrls[provider];
+  return new OpenAIProvider(apiKey, effectiveBaseUrl, model, displayName);
+}
+```
+
+### 架构示意
+
+```
+┌─────────────────────────────────────────────────────┐
+│                   OpenAI Compatible API             │
+│  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐  │
+│  │ OpenAI  │ │DeepSeek │ │OpenRouter│ │ Custom  │  │
+│  └────┬────┘ └────┬────┘ └────┬────┘ └────┬────┘  │
+│       │           │           │           │        │
+│       └───────────┴───────────┴───────────┘        │
+│                           │                         │
+│                    OpenAIProvider                   │
+│                    (统一实现)                        │
+└─────────────────────────────────────────────────────┘
+```
+
+**优势：**
+- 单一适配器实现，维护成本 O(n) → O(1)
+- 用户可自定义任意 OpenAI Compatible 服务
+- 预设配置简化常见场景
 
 ### Prompt 组装器
 
@@ -219,27 +274,55 @@ type SandboxMessage =
 
 ## 九、安全策略
 
-整体原则：内部工具，安全策略适度。允许基本交互能力，防住明显危险行为。
+> **详细文档：** 参见 [SECURITY.md](./SECURITY.md)
+
+整体原则：多层防御，允许基本交互能力，防住明显危险行为。
+
+### 三层防御架构
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     Layer 1: 服务端清洗                       │
+│  sanitizeHTML() 剥离危险代码、白名单过滤外部脚本              │
+└─────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────┐
+│                     Layer 2: iframe 沙箱隔离                   │
+│  sandbox="allow-scripts" 禁止导航、表单、弹窗                 │
+└─────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────┐
+│                     Layer 3: 白名单 CDN                        │
+│  只允许 tailwindcss.com、unpkg.com、jsdelivr.net            │
+└─────────────────────────────────────────────────────────────┘
+```
 
 ### 代码清洗器规则
 
 **禁止的内容：**
-- 外部脚本引入（`<script src="...">`）
+- 外部脚本引入（`<script src="...">`）— 白名单除外
 - 网络请求类 API（`fetch`、`XMLHttpRequest`、`WebSocket`）
-- 危险 DOM 操作（`document.cookie`、`localStorage`、`window.location` 跳转）
+- 危险 DOM 操作（`document.cookie`、`localStorage`、`window.location`）
 - `eval()`、`Function()` 等动态执行
+- Markdown 代码块标记（` ```html `）
 
 **允许的内容：**
-- 内联 `<script>` 中的简单交互逻辑（tab 切换、下拉菜单、模态框开关等）
+- 内联 `<script>` 中的简单交互逻辑（tab 切换、下拉菜单等）
 - CSS 动画和过渡效果
 - TailwindCSS CDN 引用（白名单域名）
 - 图片引用（`<img>` 标签）
 
-### 实现方式
+### iframe 沙箱配置
 
-1. LLM 返回的代码先在服务端 API Route 中经过清洗器过滤（正则 + DOM 解析两轮）
-2. iframe 的 `sandbox` 属性设置为 `allow-scripts allow-same-origin`，禁止弹窗、表单提交、导航跳转
-3. 不信任前端，清洗逻辑放在服务端
+```tsx
+<iframe sandbox="allow-scripts" srcDoc={getSandboxTemplate()} />
+```
+
+**权限设置：**
+- ✅ `allow-scripts`：Tailwind CSS 需要
+- ❌ `allow-same-origin`：阻止访问主应用 DOM/Cookie
+- ❌ `allow-forms`：阻止表单提交
+- ❌ `allow-popups`：阻止弹窗
 
 ### 错误处理策略
 

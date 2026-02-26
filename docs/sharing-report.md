@@ -401,6 +401,6 @@ Claude 迭代优化 → 人类验收确认
 
 ---
 
-**项目仓库：** https://github.com/your-org/vibe-frame
+**项目仓库：** https://github.com/geoffrey-zsg/vide-frame
 
-**在线演示：** https://vibeframe.demo.com
+**在线演示：** https://vibe-frame.vercel.app
