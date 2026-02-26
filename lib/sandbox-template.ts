@@ -178,10 +178,18 @@ export function getSandboxTemplate(): string {
           // 最终渲染确保完整内容
           renderNow();
           break;
+
+        case 'ping':
+          // 响应父组件的 ping，重新发送 ready 状态
+          parent.postMessage({ type: 'ready' }, '*');
+          break;
       }
     });
 
-    parent.postMessage({ type: 'ready' }, '*');
+    // 延迟发送 ready 消息，确保父组件有机会先注册监听器
+    setTimeout(function() {
+      parent.postMessage({ type: 'ready' }, '*');
+    }, 0);
   <\/script>
 </body>
 </html>`;

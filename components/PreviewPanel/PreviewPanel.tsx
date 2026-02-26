@@ -26,7 +26,6 @@ interface PreviewPanelProps {
   isGenerating: boolean;
   currentHTML: string | null;
   onExport: () => void;
-  onRefresh: () => void;
   providerName: string;
   modelName: string;
   onOpenSettings: () => void;
@@ -36,7 +35,6 @@ export function PreviewPanel({
   isGenerating,
   currentHTML,
   onExport,
-  onRefresh,
   providerName,
   modelName,
   onOpenSettings,
@@ -67,6 +65,15 @@ export function PreviewPanel({
       }
     }
   }, [isFullscreen]);
+
+  // 刷新预览
+  const handleRefresh = useCallback(() => {
+    if (!currentHTML || !iframeReady) return;
+    const iframe = iframeRef.current;
+    if (iframe?.contentWindow) {
+      iframe.contentWindow.postMessage({ type: 'render', html: currentHTML }, '*');
+    }
+  }, [currentHTML, iframeReady]);
 
   // 监听全屏状态变化
   useEffect(() => {
@@ -102,6 +109,36 @@ export function PreviewPanel({
 
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
+  }, []);
+
+  // 主动探测 iframe 就绪状态（处理竞态条件）
+  useEffect(() => {
+    const iframe = iframeRef.current;
+    if (!iframe) return;
+
+    // 发送 ping 让 iframe 响应 ready
+    function pingIframe() {
+      if (iframe.contentWindow) {
+        iframe.contentWindow.postMessage({ type: 'ping' }, '*');
+      }
+    }
+
+    // 监听 iframe 加载完成
+    const handleLoad = () => {
+      // 延迟一点发送 ping，确保 iframe 内脚本已执行
+      setTimeout(pingIframe, 50);
+    };
+
+    iframe.addEventListener('load', handleLoad);
+
+    // 如果 iframe 已经加载完成，也发送一次 ping
+    if (iframe.contentDocument?.readyState === 'complete') {
+      pingIframe();
+    }
+
+    return () => {
+      iframe.removeEventListener('load', handleLoad);
+    };
   }, []);
 
   // 发送 HTML 到 iframe
@@ -157,7 +194,7 @@ export function PreviewPanel({
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={onRefresh}
+            onClick={handleRefresh}
             className="px-3 py-1.5 text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-all duration-200 cursor-pointer"
             title="刷新预览"
           >

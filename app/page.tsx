@@ -301,11 +301,6 @@ export default function Home() {
     }
   }, [currentHTML]);
 
-  const handleRefresh = useCallback(() => {
-    if (!currentHTML) return;
-    sendToIframe('render', { html: currentHTML });
-  }, [currentHTML]);
-
   const { providerName, modelName } = getDisplayNames(settings);
 
   return (
@@ -333,7 +328,6 @@ export default function Home() {
             isGenerating={isGenerating}
             currentHTML={currentHTML}
             onExport={handleExport}
-            onRefresh={handleRefresh}
             providerName={providerName}
             modelName={modelName}
             onOpenSettings={() => setShowSettings(true)}
