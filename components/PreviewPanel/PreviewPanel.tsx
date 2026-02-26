@@ -1,16 +1,8 @@
 'use client';
 
-import { useRef, useState, useEffect, useCallback } from 'react';
-import type { ElementInfo, SandboxMessage } from '@/lib/types';
+import { useRef, useState, useEffect } from 'react';
 import { getSandboxTemplate } from '@/lib/sandbox-template';
 import { Skeleton } from './Skeleton';
-
-declare global {
-  interface Window {
-    __vibeframe_sendChunk?: (chunk: string) => void;
-    __vibeframe_sendComplete?: () => void;
-  }
-}
 
 interface PreviewPanelProps {
   isGenerating: boolean;
@@ -35,19 +27,16 @@ export function PreviewPanel({
   const [iframeReady, setIframeReady] = useState(false);
   const [renderError, setRenderError] = useState<string | null>(null);
 
-  // Listen for messages from the sandbox iframe
+  // 监听来自 iframe 的消息
   useEffect(() => {
-    function handleMessage(e: MessageEvent<SandboxMessage>) {
+    function handleMessage(e: MessageEvent) {
       const msg = e.data;
       if (!msg || !msg.type) return;
 
-      switch (msg.type) {
-        case 'ready':
-          setIframeReady(true);
-          break;
-        case 'render-error':
-          setRenderError(msg.error);
-          break;
+      if (msg.type === 'ready') {
+        setIframeReady(true);
+      } else if (msg.type === 'render-error') {
+        setRenderError(msg.error);
       }
     }
 
@@ -55,58 +44,21 @@ export function PreviewPanel({
     return () => window.removeEventListener('message', handleMessage);
   }, []);
 
-  // Send full HTML to iframe when currentHTML changes, and clear any previous error
+  // 当 currentHTML 变化时发送给 iframe，并清除错误
   useEffect(() => {
     if (!iframeReady) return;
-    
-    // Clearing previous render error before posting new HTML is intentional;
-    // this is not a cascading render but a coordinated state reset.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setRenderError(null);
-    
-    if (!currentHTML) {
-      iframeRef.current?.contentWindow?.postMessage(
-        { type: 'render', html: '' },
-        '*'
-      );
-      return;
-    }
 
-    iframeRef.current?.contentWindow?.postMessage(
-      { type: 'render', html: currentHTML },
+    const iframe = iframeRef.current;
+    if (!iframe?.contentWindow) return;
+
+    // 清除之前的错误（使用函数式更新避免依赖 renderError）
+    setRenderError((prev) => (prev ? null : prev));
+
+    iframe.contentWindow.postMessage(
+      { type: 'render', html: currentHTML || '' },
       '*'
     );
   }, [currentHTML, iframeReady]);
-
-  // Chunk streaming helpers
-  const sendChunk = useCallback(
-    (chunk: string) => {
-      if (!iframeReady) return;
-      iframeRef.current?.contentWindow?.postMessage(
-        { type: 'render-chunk', chunk },
-        '*'
-      );
-    },
-    [iframeReady]
-  );
-
-  const sendComplete = useCallback(() => {
-    if (!iframeReady) return;
-    iframeRef.current?.contentWindow?.postMessage(
-      { type: 'render-complete' },
-      '*'
-    );
-  }, [iframeReady]);
-
-  // Expose chunk helpers on window for the main page to call
-  useEffect(() => {
-    window.__vibeframe_sendChunk = sendChunk;
-    window.__vibeframe_sendComplete = sendComplete;
-    return () => {
-      delete window.__vibeframe_sendChunk;
-      delete window.__vibeframe_sendComplete;
-    };
-  }, [sendChunk, sendComplete]);
 
   const showSkeleton = !!renderError || (!currentHTML && !isGenerating);
 

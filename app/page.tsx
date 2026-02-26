@@ -14,14 +14,7 @@ import {
   setCurrentSessionId,
   generateSessionTitle,
 } from '@/lib/session-storage';
-import type { StyleId, Message, ElementInfo, UserSettings, Session } from '@/lib/types';
-
-declare global {
-  interface Window {
-    __vibeframe_sendChunk?: (chunk: string) => void;
-    __vibeframe_sendComplete?: () => void;
-  }
-}
+import type { StyleId, Message, UserSettings, Session } from '@/lib/types';
 
 const SETTINGS_KEY = 'vibeframe_settings';
 
@@ -40,6 +33,14 @@ function getDisplayNames(settings: UserSettings) {
     providerName: preset?.name ?? settings.provider,
     modelName: settings.model || '未配置',
   };
+}
+
+/** 直接向 iframe 发送消息，不依赖全局函数 */
+function sendToIframe(type: string, data?: Record<string, unknown>) {
+  const iframe = document.querySelector('iframe');
+  if (iframe?.contentWindow) {
+    iframe.contentWindow.postMessage({ type, ...data }, '*');
+  }
 }
 
 export default function Home() {
@@ -236,10 +237,10 @@ export default function Home() {
               if (data.error) {
                 throw new Error(data.error);
               }
-              // 每次调用时从 window 重新获取，避免闭包捕获 iframeReady=false 的旧函数
+              // 每次调用时直接通过 DOM 查询 iframe 发送消息
               if (data.chunk) {
                 fullHTML += data.chunk;
-                window.__vibeframe_sendChunk?.(data.chunk);
+                sendToIframe('render-chunk', { chunk: data.chunk });
               }
               if (data.done && data.html) {
                 fullHTML = data.html;
@@ -254,7 +255,7 @@ export default function Home() {
 
         const finalMessages = [...updatedMessages, { role: 'assistant' as const, content: fullHTML }];
         setMessages(finalMessages);
-        window.__vibeframe_sendComplete?.();
+        sendToIframe('render-complete');
 
         // 自动保存会话
         autoSaveSession(finalMessages, fullHTML, currentSessionId, style);
@@ -302,8 +303,7 @@ export default function Home() {
 
   const handleRefresh = useCallback(() => {
     if (!currentHTML) return;
-    const iframe = document.querySelector('iframe');
-    iframe?.contentWindow?.postMessage({ type: 'render', html: currentHTML }, '*');
+    sendToIframe('render', { html: currentHTML });
   }, [currentHTML]);
 
   const { providerName, modelName } = getDisplayNames(settings);

@@ -47,21 +47,38 @@ export function getSandboxTemplate(): string {
     let chunks = '';
     let renderTimer = null;
     let isFirstChunk = true;
-    const RENDER_INTERVAL = 500; // 节流间隔：500ms
+    const RENDER_INTERVAL = 300; // 节流间隔：300ms
+
+    // 检测 markdown 代码块标记（使用 Unicode 编码避免模板字符串转义问题）
+    const CODE_BLOCK_START = String.fromCharCode(96, 96, 96); // \`\`\`
+    const CODE_BLOCK_HTML = String.fromCharCode(96, 96, 96, 104, 116, 109, 108); // \`\`\`html
 
     // 解析 HTML 并提取 body 内容，容错处理不完整的 HTML
     function parseAndExtract(html) {
+      // 去除开头的 markdown 代码块标记
+      let content = html.trim();
+      if (content.startsWith(CODE_BLOCK_HTML)) {
+        content = content.slice(CODE_BLOCK_HTML.length).trim();
+      } else if (content.startsWith(CODE_BLOCK_START)) {
+        content = content.slice(CODE_BLOCK_START.length).trim();
+      }
+
+      // 去除结尾的代码块标记
+      if (content.endsWith(CODE_BLOCK_START)) {
+        content = content.slice(0, -CODE_BLOCK_START.length).trim();
+      }
+
       // 如果已经是完整的 HTML 文档，提取 body 内容
-      if (html.includes('<body') || html.includes('<!DOCTYPE')) {
+      if (content.includes('<body') || content.includes('<!DOCTYPE')) {
         try {
-          const parser = new DOMParser();
-          const doc = parser.parseFromString(html, 'text/html');
-          return doc.body.innerHTML || html;
-        } catch {
-          return html;
+          var parser = new DOMParser();
+          var doc = parser.parseFromString(content, 'text/html');
+          return doc.body.innerHTML || content;
+        } catch (e) {
+          return content;
         }
       }
-      return html;
+      return content;
     }
 
     // 安全地渲染 HTML，处理不完整片段
@@ -71,10 +88,9 @@ export function getSandboxTemplate(): string {
       }
 
       try {
-        const content = parseAndExtract(html);
+        var content = parseAndExtract(html);
 
-        // 如果内容看起来像是代码块标记（markdown），跳过
-        if (content.trim().startsWith('\`\`\`')) {
+        if (!content || !content.trim()) {
           return;
         }
 
@@ -100,8 +116,8 @@ export function getSandboxTemplate(): string {
       renderTimer = setTimeout(renderNow, RENDER_INTERVAL);
     }
 
-    window.addEventListener('message', (e) => {
-      const msg = e.data;
+    window.addEventListener('message', function(e) {
+      var msg = e.data;
       if (!msg || !msg.type) return;
 
       switch (msg.type) {
@@ -131,6 +147,7 @@ export function getSandboxTemplate(): string {
       }
     });
 
+    // 通知父窗口 iframe 已准备好
     parent.postMessage({ type: 'ready' }, '*');
   <\/script>
 </body>
