@@ -10,7 +10,7 @@
 
 **技术栈：** Next.js 16 (App Router)、React 19、TypeScript 5、Tailwind CSS 4、Vitest 4
 
-**设计文档：** `docs/plans/2026-02-14-vibeframe-design.md`
+**设计文档：** `docs/plans/design.md`
 
 **实施变更说明：**
 - LLM Provider 从多适配器改为统一 OpenAI Compatible API

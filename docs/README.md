@@ -14,8 +14,9 @@ docs/
 ├── screenshots/                        # 截图目录
 │   └── *.png
 └── plans/                              # 设计与实施计划
-    ├── 2026-02-14-vibeframe-design.md  # 原始设计文档
-    └── 2026-02-25-vibeframe-implementation.md  # 实施计划
+    ├── design.md                       # 设计文档
+    ├── implementation.md               # 实施计划
+    └── ui-ux-optimization.md           # UI/UX 优化
 ```
 
 ## 文档说明
