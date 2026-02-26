@@ -12,9 +12,11 @@ export function getSandboxTemplate(): string {
       cursor: pointer;
     }
     body {
-      margin:0;
+      margin: 0;
+      /* 防止内容变化时的布局抖动 */
+      overflow-x: hidden;
     }
-    /* 加载动画 */
+    /* 加载动画 - 居中显示 */
     .vf-loading {
       display: flex;
       align-items: center;
@@ -34,6 +36,14 @@ export function getSandboxTemplate(): string {
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
+    /* 平滑过渡效果 */
+    #vf-root {
+      opacity: 1;
+      transition: opacity 0.15s ease-out;
+    }
+    #vf-root.vf-rendering {
+      opacity: 0.7;
+    }
   </style>
 </head>
 <body>
@@ -47,7 +57,11 @@ export function getSandboxTemplate(): string {
     var chunks = '';
     var renderTimer = null;
     var isFirstChunk = true;
-    var RENDER_INTERVAL = 300;
+    var lastRenderedHTML = '';
+    // 使用 requestAnimationFrame 进行渲染节流
+    var renderScheduled = false;
+    var RENDER_INTERVAL = 200;
+    var MIN_RENDER_INTERVAL = 100;
 
     // 检测 markdown 代码块标记
     var CODE_BLOCK_START = String.fromCharCode(96, 96, 96);
@@ -84,7 +98,18 @@ export function getSandboxTemplate(): string {
         if (!content || !content.trim()) {
           return false;
         }
+        // 避免 HTML 相同时重复渲染
+        if (content === lastRenderedHTML) {
+          return true;
+        }
+        // 添加渲染中状态
+        root.classList.add('vf-rendering');
         root.innerHTML = content;
+        lastRenderedHTML = content;
+        // 移除渲染中状态
+        requestAnimationFrame(function() {
+          root.classList.remove('vf-rendering');
+        });
         return true;
       } catch (err) {
         console.error('Render error:', err);
@@ -94,6 +119,7 @@ export function getSandboxTemplate(): string {
     }
 
     function renderNow() {
+      renderScheduled = false;
       if (renderTimer) {
         clearTimeout(renderTimer);
         renderTimer = null;
@@ -105,8 +131,22 @@ export function getSandboxTemplate(): string {
     }
 
     function scheduleRender() {
-      if (renderTimer) return;
-      renderTimer = setTimeout(renderNow, RENDER_INTERVAL);
+      // 使用 requestAnimationFrame 进行节流，确保在浏览器重绘前渲染
+      if (!renderScheduled) {
+        renderScheduled = true;
+        requestAnimationFrame(renderNow);
+      }
+    }
+
+    function scheduleDebouncedRender() {
+      if (renderTimer) {
+        clearTimeout(renderTimer);
+      }
+      renderTimer = setTimeout(function() {
+        renderTimer = null;
+        if (renderScheduled) return;
+        scheduleRender();
+      }, RENDER_INTERVAL);
     }
 
     window.addEventListener('message', function(e) {
@@ -116,6 +156,7 @@ export function getSandboxTemplate(): string {
       switch (msg.type) {
         case 'render':
           chunks = msg.html || '';
+          lastRenderedHTML = '';
           isFirstChunk = true;
           renderNow();
           break;
@@ -124,14 +165,17 @@ export function getSandboxTemplate(): string {
           chunks += msg.chunk;
           if (isFirstChunk) {
             isFirstChunk = false;
+            // 首块立即渲染
             renderNow();
           } else {
-            scheduleRender();
+            // 后续块使用防抖 + requestAnimationFrame
+            scheduleDebouncedRender();
           }
           break;
 
         case 'render-complete':
           isFirstChunk = true;
+          // 最终渲染确保完整内容
           renderNow();
           break;
       }

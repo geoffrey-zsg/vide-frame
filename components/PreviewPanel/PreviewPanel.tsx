@@ -60,7 +60,12 @@ export function PreviewPanel({
     );
   }, [currentHTML, iframeReady]);
 
-  const showSkeleton = !!renderError || (!currentHTML && !isGenerating);
+  // 判断是否显示骨架屏（初始空状态或错误状态）
+  const showSkeleton = !currentHTML && !isGenerating;
+  // 是否显示错误覆盖层
+  const showError = !!renderError;
+  // 是否正在生成中（用于显示过渡效果）
+  const isStreamRendering = isGenerating && currentHTML;
 
   return (
     <div className="flex flex-col h-full bg-slate-50/50">
@@ -113,16 +118,29 @@ export function PreviewPanel({
 
       {/* Preview area */}
       <div className="relative flex-1 overflow-hidden">
+        {/* 初始骨架屏 - 仅在无内容且非生成中时显示 */}
         {showSkeleton && (
-          <div className="absolute inset-0 z-10 bg-white">
+          <div className="absolute inset-0 z-10 bg-white transition-opacity duration-300">
+            <Skeleton />
+          </div>
+        )}
+        {/* 错误覆盖层 - 半透明背景，不影响 iframe 布局 */}
+        {showError && (
+          <div className="absolute inset-0 z-20 bg-white/95 backdrop-blur-sm transition-opacity duration-200">
             <Skeleton error={renderError ?? undefined} />
+          </div>
+        )}
+        {/* 流式渲染指示器 - 小型悬浮提示，不遮挡内容 */}
+        {isStreamRendering && (
+          <div className="absolute top-3 right-3 z-10 px-2.5 py-1.5 rounded-lg bg-indigo-500/90 text-white text-xs font-medium shadow-lg animate-pulse backdrop-blur-sm">
+            渲染中...
           </div>
         )}
         <iframe
           ref={iframeRef}
           srcDoc={getSandboxTemplate()}
           sandbox="allow-scripts"
-          className="w-full h-full border-0"
+          className="w-full h-full border-0 bg-white"
           title="预览"
         />
       </div>
