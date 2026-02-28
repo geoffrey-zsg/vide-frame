@@ -41,9 +41,15 @@ export function PreviewPanel({
 }: PreviewPanelProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const previewAreaRef = useRef<HTMLDivElement>(null);
   const [iframeReady, setIframeReady] = useState(false);
   const [renderError, setRenderError] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [scale, setScale] = useState(1);
+  const [containerHeight, setContainerHeight] = useState(0);
+
+  // 固定视口宽度，模拟桌面浏览器
+  const VIEWPORT_WIDTH = 1440;
 
   // 全屏切换
   const toggleFullscreen = useCallback(() => {
@@ -82,7 +88,6 @@ export function PreviewPanel({
     }
 
     document.addEventListener('fullscreenchange', handleFullscreenChange);
-    // Safari 兼容
     document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
 
     return () => {
@@ -90,6 +95,21 @@ export function PreviewPanel({
       document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
     };
   }, []);
+
+  // 根据容器宽度计算缩放比例
+  useEffect(() => {
+    const el = previewAreaRef.current;
+    if (!el) return;
+
+    const observer = new ResizeObserver((entries) => {
+      const { width, height } = entries[0].contentRect;
+      setScale(width / VIEWPORT_WIDTH);
+      setContainerHeight(height);
+    });
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [VIEWPORT_WIDTH]);
 
   // 监听来自 iframe 的消息
   useEffect(() => {
@@ -219,7 +239,7 @@ export function PreviewPanel({
       </div>
 
       {/* Preview area */}
-      <div className="relative flex-1 overflow-hidden">
+      <div ref={previewAreaRef} className="relative flex-1 overflow-hidden">
         {/* 初始骨架屏 - 仅在无内容且非生成中时显示 */}
         {showSkeleton && (
           <div className="absolute inset-0 z-10 bg-white transition-opacity duration-300">
@@ -242,8 +262,14 @@ export function PreviewPanel({
           ref={iframeRef}
           srcDoc={getSandboxTemplate()}
           sandbox="allow-scripts"
-          className="w-full h-full border-0 bg-white"
+          className="border-0 bg-white"
           title="预览"
+          style={{
+            width: `${VIEWPORT_WIDTH}px`,
+            height: scale > 0 ? `${containerHeight / scale}px` : '100%',
+            transform: `scale(${scale})`,
+            transformOrigin: 'top left',
+          }}
         />
       </div>
     </div>

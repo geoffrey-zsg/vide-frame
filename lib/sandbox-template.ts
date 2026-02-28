@@ -158,7 +158,12 @@ export function getSandboxTemplate(): string {
           chunks = msg.html || '';
           lastRenderedHTML = '';
           isFirstChunk = true;
-          renderNow();
+          if (chunks) {
+            renderNow();
+          } else {
+            // 空内容时显示加载动画
+            root.innerHTML = '<div class="vf-loading"><div class="vf-loading-spinner"></div></div>';
+          }
           break;
 
         case 'render-chunk':

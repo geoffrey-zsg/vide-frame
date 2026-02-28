@@ -194,6 +194,9 @@ export default function Home() {
 
       let fullHTML = '';
 
+      // 重置 iframe 渲染状态，防止多轮对话时新旧内容叠加
+      sendToIframe('render', { html: '' });
+
       try {
         const response = await fetch('/api/generate', {
           method: 'POST',
