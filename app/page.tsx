@@ -144,6 +144,8 @@ export default function Home() {
     setImage(null);
     setCurrentSessionIdState(session.id);
     setCurrentSessionId(session.id);
+    // 直接发送到 iframe，避免 currentHTML 值相同时 useEffect 不触发
+    sendToIframe('render', { html: session.currentHTML || '' });
   }, []);
 
   /** 删除会话 */
@@ -171,6 +173,13 @@ export default function Home() {
     setImage(null);
     setCurrentSessionIdState(null);
     setCurrentSessionId(null);
+  }, []);
+
+  /** 预览指定 HTML（点击历史消息中的预览按钮） */
+  const handlePreviewHTML = useCallback((html: string) => {
+    setCurrentHTML(html);
+    // 直接发送到 iframe，避免 HTML 值相同时 React 跳过更新
+    sendToIframe('render', { html });
   }, []);
 
   const handleSend = useCallback(
@@ -318,7 +327,7 @@ export default function Home() {
             messages={messages}
             isGenerating={isGenerating}
             onSend={handleSend}
-            onPreviewHTML={setCurrentHTML}
+            onPreviewHTML={handlePreviewHTML}
             sessions={sessions}
             currentSessionId={currentSessionId}
             onSelectSession={handleSelectSession}
