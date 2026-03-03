@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { SplitPane } from '@/components/SplitPane';
 import { InputPanel } from '@/components/InputPanel';
 import { PreviewPanel } from '@/components/PreviewPanel';
@@ -53,6 +53,8 @@ export default function Home() {
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [currentSessionId, setCurrentSessionIdState] = useState<string | null>(null);
+  // iframe 刷新 key，新建会话时改变以强制重新加载 iframe
+  const [iframeKey, setIframeKey] = useState(0);
 
   // 初始化：从 localStorage 恢复设置和会话
   useEffect(() => {
@@ -63,6 +65,8 @@ export default function Home() {
         const parsed = JSON.parse(stored) as UserSettings;
         if (parsed.provider && parsed.model) {
           setSettings(parsed);
+          // 本地已有配置，标记为已初始化，不再自动弹窗
+          hasCheckedSettingsRef.current = true;
         }
       }
     } catch {
@@ -95,8 +99,15 @@ export default function Home() {
     }
   }, []);
 
+  // 标记是否已检查过设置（防止重复弹窗）
+  const hasCheckedSettingsRef = useRef(false);
+
   // 如果尚未配置 API Key，首次打开时自动弹出设置
   useEffect(() => {
+    // 已检查过则不再处理
+    if (hasCheckedSettingsRef.current) return;
+    hasCheckedSettingsRef.current = true;
+
     if (!settings.apiKey) {
       setShowSettings(true);
     }
@@ -173,6 +184,8 @@ export default function Home() {
     setImage(null);
     setCurrentSessionIdState(null);
     setCurrentSessionId(null);
+    // 改变 iframeKey 强制重新加载 iframe，清空之前的内容
+    setIframeKey(prev => prev + 1);
   }, []);
 
   /** 预览指定 HTML（点击历史消息中的预览按钮） */
@@ -337,6 +350,7 @@ export default function Home() {
         }
         right={
           <PreviewPanel
+            key={iframeKey}
             isGenerating={isGenerating}
             currentHTML={currentHTML}
             onExport={handleExport}

@@ -5,6 +5,7 @@ export function getSandboxTemplate(): string {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script src="https://cdn.tailwindcss.com" async><\/script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"><\/script>
   <style>
     .vf-highlight {
       outline: 2px solid #3b82f6 !important;
@@ -311,7 +312,7 @@ export function getSandboxTemplate(): string {
       parent.postMessage({ type: 'ready' }, '*');
     }, 0);
 
-    // 处理链接点击 - 允许在新标签页打开
+    // 处理链接点击 - 阻止所有导航，通知父页面
     document.addEventListener('click', function(e) {
       var target = e.target;
       // 向上查找最近的 A 标签
@@ -319,15 +320,25 @@ export function getSandboxTemplate(): string {
         target = target.parentElement;
       }
       if (target && target.tagName === 'A') {
-        var href = target.getAttribute('href');
-        // 如果是外部链接或需要新窗口打开
-        if (href && (href.startsWith('http') || href.startsWith('//') || target.getAttribute('target') === '_blank')) {
-          // 不阻止默认行为，让链接正常跳转
-          // 但如果是相对路径且没有 target，在当前 iframe 内跳转
-          return;
+        var href = target.getAttribute('href') || '';
+        // 阻止所有链接的默认行为
+        e.preventDefault();
+        e.stopPropagation();
+        // 通知父页面用户点击了链接
+        parent.postMessage({
+          type: 'link-clicked',
+          href: href,
+          text: target.textContent || ''
+        }, '*');
+        // 外部链接提示用户可在新标签页打开
+        if (href && (href.startsWith('http') || href.startsWith('//'))) {
+          // 询问用户是否在新标签页打开
+          if (confirm('是否在新标签页打开此链接？ ' + href)) {
+            window.open(href, '_blank', 'noopener,noreferrer');
+          }
         }
       }
-    });
+    }, true);
   <\/script>
 </body>
 </html>`;

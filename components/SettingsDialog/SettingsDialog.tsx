@@ -52,7 +52,7 @@ export function SettingsDialog({
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-xl shadow-xl max-w-md w-full p-6"
+        className="bg-white rounded-xl shadow-xl max-w-xl w-full p-6"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-lg font-semibold mb-4">模型配置</h2>

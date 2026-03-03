@@ -1,523 +1,348 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>登录与注册</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>流程图展示 - 系统架构</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
     <style>
-        body {
-            font-family: 'Inter', system-ui, sans-serif;
-            background: linear-gradient(135deg, #0F0F1A 0%, #1A1A2E 100%);
-            min-height: 100vh;
-        }
-        
-        .glass-card {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 0 20px rgba(59, 130, 246, 0.15);
-        }
-        
-        .input-field {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.3s ease;
-        }
-        
-        .input-field:focus {
-            border-color: #3B82F6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
-        
-        .btn-primary {
-            background: #3B82F6;
-            transition: all 0.3s ease;
-        }
-        
-        .btn-primary:hover {
-            background: #2563EB;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
-        }
-        
-        .btn-primary:active {
-            transform: translateY(0);
-        }
-        
-        .fade-in {
-            animation: fadeIn 0.4s ease-out;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .shake {
-            animation: shake 0.5s ease-in-out;
-        }
-        
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
-        }
-        
-        .error-message {
-            color: #EF4444;
-            font-size: 0.75rem;
-            margin-top: 0.25rem;
-            display: none;
-        }
-        
-        .error-message.show {
-            display: block;
-        }
-        
-        .input-error {
-            border-color: #EF4444 !important;
-        }
-        
-        .success-check {
-            color: #10B981;
-        }
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+
+      body {
+        font-family: "Inter", system-ui, sans-serif;
+        background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 100%);
+        min-height: 100vh;
+      }
+
+      .glass-card {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 0 20px rgba(59, 130, 246, 0.15);
+      }
+
+      .glow-button {
+        background: #3b82f6;
+        transition: all 0.3s ease;
+      }
+
+      .glow-button:hover {
+        box-shadow: 0 0 30px rgba(59, 130, 246, 0.4);
+        transform: translateY(-2px);
+      }
+
+      .nav-item {
+        color: #9ca3af;
+        transition: all 0.3s ease;
+      }
+
+      .nav-item:hover,
+      .nav-item.active {
+        color: #3b82f6;
+      }
+
+      .mermaid-container {
+        background: rgba(15, 15, 26, 0.8);
+        border-radius: 16px;
+      }
     </style>
-</head>
-<body class="flex items-center justify-center p-4">
-    <!-- 装饰性背景元素 -->
-    <div class="fixed inset-0 overflow-hidden pointer-events-none">
-        <div class="absolute top-20 left-10 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl"></div>
-        <div class="absolute bottom-20 right-10 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"></div>
-    </div>
-
-    <!-- 登录表单容器 -->
-    <div id="loginContainer" class="w-full max-w-md glass-card rounded-2xl p-8 fade-in relative z-10">
-        <div class="text-center mb-8">
-            <div class="w-16 h-16 mx-auto mb-4 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-                </svg>
+  </head>
+  <body class="text-[#E0E0E0]">
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-50 glass-card backdrop-blur-md">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+          <div class="flex items-center gap-3">
+            <div
+              class="w-8 h-8 rounded-lg bg-[#3B82F6] flex items-center justify-center"
+            >
+              <svg
+                class="w-5 h-5 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"
+                />
+              </svg>
             </div>
-            <h1 class="text-2xl font-bold text-[#E0E0E0] mb-2">欢迎回来</h1>
-            <p class="text-[#9CA3AF] text-sm">请登录您的账户以继续</p>
+            <span class="font-semibold text-lg">FlowChart Pro</span>
+          </div>
+          <div class="hidden md:flex items-center gap-8">
+            <button
+              onclick="showPage('home')"
+              class="nav-item active font-medium"
+              id="nav-home"
+            >
+              首页
+            </button>
+            <button
+              onclick="showPage('architecture')"
+              class="nav-item font-medium"
+              id="nav-architecture"
+            >
+              系统架构
+            </button>
+            <button
+              onclick="showPage('process')"
+              class="nav-item font-medium"
+              id="nav-process"
+            >
+              业务流程
+            </button>
+            <button
+              onclick="showPage('dataflow')"
+              class="nav-item font-medium"
+              id="nav-dataflow"
+            >
+              数据流转
+            </button>
+          </div>
+          <button
+            class="glow-button px-5 py-2 rounded-xl text-white font-medium text-sm"
+          >
+            导出图表
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="pt-24 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+      <!-- Home Page -->
+      <section id="page-home" class="page-section">
+        <div class="text-center mb-16">
+          <h1 class="text-4xl md:text-6xl font-bold mb-6 leading-tight">
+            可视化您的<span class="text-[#3B82F6]">系统架构</span>
+          </h1>
+          <p class="text-[#9CA3AF] text-lg md:text-xl max-w-2xl mx-auto mb-8">
+            使用 Mermaid
+            语法创建专业的流程图、时序图和架构图，让复杂系统一目了然。
+          </p>
+          <div class="flex flex-wrap justify-center gap-4">
+            <button
+              onclick="showPage('architecture')"
+              class="glow-button px-8 py-3 rounded-2xl text-white font-semibold"
+            >
+              查看架构图
+            </button>
+            <button
+              onclick="showPage('process')"
+              class="px-8 py-3 rounded-2xl border border-[rgba(255,255,255,0.2)] hover:border-[#3B82F6] transition-colors"
+            >
+              业务流程
+            </button>
+          </div>
         </div>
 
-        <form id="loginForm" novalidate>
-            <div class="mb-5">
-                <label for="loginEmail" class="block text-sm font-medium text-[#E0E0E0] mb-2">电子邮箱</label>
-                <input 
-                    type="email" 
-                    id="loginEmail" 
-                    class="input-field w-full px-4 py-3 rounded-xl text-[#E0E0E0] placeholder-[#6B7280] outline-none"
-                    placeholder="your@email.com"
-                    autocomplete="email"
-                >
-                <span class="error-message" id="loginEmailError">请输入有效的电子邮箱地址</span>
+        <!-- Feature Cards -->
+        <div class="grid md:grid-cols-3 gap-6 mt-16">
+          <div class="glass-card rounded-2xl p-6">
+            <div
+              class="w-12 h-12 rounded-xl bg-[#3B82F6]/20 flex items-center justify-center mb-4"
+            >
+              <svg
+                class="w-6 h-6 text-[#3B82F6]"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"
+                />
+              </svg>
             </div>
-
-            <div class="mb-5">
-                <label for="loginPassword" class="block text-sm font-medium text-[#E0E0E0] mb-2">密码</label>
-                <div class="relative">
-                    <input 
-                        type="password" 
-                        id="loginPassword" 
-                        class="input-field w-full px-4 py-3 rounded-xl text-[#E0E0E0] placeholder-[#6B7280] outline-none pr-12"
-                        placeholder="••••••••"
-                        autocomplete="current-password"
-                    >
-                    <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#E0E0E0] transition-colors" onclick="togglePassword('loginPassword', this)">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                        </svg>
-                    </button>
-                </div>
-                <span class="error-message" id="loginPasswordError">密码不能为空</span>
-            </div>
-
-            <div class="flex items-center justify-between mb-6">
-                <label class="flex items-center cursor-pointer">
-                    <input type="checkbox" class="w-4 h-4 rounded border-[rgba(255,255,255,0.2)] bg-[rgba(255,255,255,0.05)] text-[#3B82F6] focus:ring-[#3B82F6] focus:ring-offset-0">
-                    <span class="ml-2 text-sm text-[#9CA3AF]">记住我</span>
-                </label>
-                <a href="#" class="text-sm text-[#3B82F6] hover:text-[#60A5FA] transition-colors">忘记密码？</a>
-            </div>
-
-            <button type="submit" class="btn-primary w-full py-3 rounded-xl text-white font-semibold text-sm">
-                登录
-            </button>
-        </form>
-
-        <div class="mt-6 text-center">
+            <h3 class="text-lg font-semibold mb-2">系统架构图</h3>
             <p class="text-[#9CA3AF] text-sm">
-                还没有账户？
-                <button onclick="showRegister()" class="text-[#3B82F6] hover:text-[#60A5FA] font-medium ml-1 transition-colors">
-                    立即注册
-                </button>
+              清晰展示微服务架构与组件依赖关系
             </p>
+          </div>
+          <div class="glass-card rounded-2xl p-6">
+            <div
+              class="w-12 h-12 rounded-xl bg-[#3B82F6]/20 flex items-center justify-center mb-4"
+            >
+              <svg
+                class="w-6 h-6 text-[#3B82F6]"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                />
+              </svg>
+            </div>
+            <h3 class="text-lg font-semibold mb-2">业务流程图</h3>
+            <p class="text-[#9CA3AF] text-sm">梳理业务逻辑，优化工作流程</p>
+          </div>
+          <div class="glass-card rounded-2xl p-6">
+            <div
+              class="w-12 h-12 rounded-xl bg-[#3B82F6]/20 flex items-center justify-center mb-4"
+            >
+              <svg
+                class="w-6 h-6 text-[#3B82F6]"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+                />
+              </svg>
+            </div>
+            <h3 class="text-lg font-semibold mb-2">数据流转图</h3>
+            <p class="text-[#9CA3AF] text-sm">追踪数据从采集到存储的完整路径</p>
+          </div>
         </div>
+      </section>
 
-        <div class="mt-6">
-            <div class="relative">
-                <div class="absolute inset-0 flex items-center">
-                    <div class="w-full border-t border-[rgba(255,255,255,0.1)]"></div>
-                </div>
-                <div class="relative flex justify-center text-sm">
-                    <span class="px-2 bg-[#1A1A2E] text-[#9CA3AF]">或使用以下方式</span>
-                </div>
-            </div>
-
-            <div class="mt-6 grid grid-cols-2 gap-3">
-                <button class="flex items-center justify-center px-4 py-2.5 rounded-xl border border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.03)] text-[#E0E0E0] hover:bg-[rgba(255,255,255,0.08)] transition-all">
-                    <svg class="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                    </svg>
-                    Google
-                </button>
-                <button class="flex items-center justify-center px-4 py-2.5 rounded-xl border border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.03)] text-[#E0E0E0] hover:bg-[rgba(255,255,255,0.08)] transition-all">
-                    <svg class="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 2C6.477 2 2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.879V14.89h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.989C18.343 21.129 22 16.99 22 12c0-5.523-4.477-10-10-10z"/>
-                    </svg>
-                    GitHub
-                </button>
-            </div>
+      <!-- Architecture Page -->
+      <section id="page-architecture" class="page-section hidden">
+        <div class="mb-8">
+          <h2 class="text-3xl font-bold mb-2">微服务系统架构</h2>
+          <p class="text-[#9CA3AF]">展示前后端分离的微服务架构设计</p>
         </div>
-    </div>
-
-    <!-- 注册表单容器 -->
-    <div id="registerContainer" class="w-full max-w-md glass-card rounded-2xl p-8 hidden relative z-10">
-        <div class="text-center mb-8">
-            <div class="w-16 h-16 mx-auto mb-4 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
-                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
-                </svg>
-            </div>
-            <h1 class="text-2xl font-bold text-[#E0E0E0] mb-2">创建账户</h1>
-            <p class="text-[#9CA3AF] text-sm">填写以下信息开始您的旅程</p>
+        <div
+          class="glass-card rounded-3xl p-8 mermaid-container overflow-x-auto"
+        >
+          <div class="mermaid">
+            flowchart TB subgraph Client["客户端层"] Web["Web 应用<br />React/Vue"]
+            Mobile["移动 App<br />iOS/Android"] Admin["管理后台<br />Next.js"]
+            end subgraph Gateway["网关层"] CDN["CDN 加速"] LB["负载均衡<br />Nginx"]
+            APIGW["API 网关<br />Kong"] end subgraph Service["微服务层"]
+            Auth["认证服务<br />OAuth2/JWT"] User["用户服务"] Order["订单服务"]
+            Pay["支付服务"] Msg["消息服务<br />WebSocket"] end subgraph
+            Data["数据层"] MySQL[(MySQL<br />主从集群)] Redis[(Redis<br />缓存集群)]
+            ES[(Elasticsearch<br />搜索引擎)] MQ[RabbitMQ<br />消息队列] end Web
+            --> CDN Mobile --> CDN Admin --> LB CDN --> LB LB --> APIGW APIGW
+            --> Auth APIGW --> User APIGW --> Order APIGW --> Pay APIGW --> Msg
+            Auth --> Redis User --> MySQL Order --> MySQL Order --> MQ Pay -->
+            MQ Msg --> Redis User --> ES
+          </div>
         </div>
+      </section>
 
-        <form id="registerForm" novalidate>
-            <div class="mb-5">
-                <label for="registerName" class="block text-sm font-medium text-[#E0E0E0] mb-2">用户名</label>
-                <input 
-                    type="text" 
-                    id="registerName" 
-                    class="input-field w-full px-4 py-3 rounded-xl text-[#E0E0E0] placeholder-[#6B7280] outline-none"
-                    placeholder="您的用户名"
-                    autocomplete="name"
-                >
-                <span class="error-message" id="registerNameError">用户名至少需要2个字符</span>
-            </div>
-
-            <div class="mb-5">
-                <label for="registerEmail" class="block text-sm font-medium text-[#E0E0E0] mb-2">电子邮箱</label>
-                <input 
-                    type="email" 
-                    id="registerEmail" 
-                    class="input-field w-full px-4 py-3 rounded-xl text-[#E0E0E0] placeholder-[#6B7280] outline-none"
-                    placeholder="your@email.com"
-                    autocomplete="email"
-                >
-                <span class="error-message" id="registerEmailError">请输入有效的电子邮箱地址</span>
-            </div>
-
-            <div class="mb-5">
-                <label for="registerPassword" class="block text-sm font-medium text-[#E0E0E0] mb-2">密码</label>
-                <div class="relative">
-                    <input 
-                        type="password" 
-                        id="registerPassword" 
-                        class="input-field w-full px-4 py-3 rounded-xl text-[#E0E0E0] placeholder-[#6B7280] outline-none pr-12"
-                        placeholder="至少8位字符"
-                        autocomplete="new-password"
-                    >
-                    <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#E0E0E0] transition-colors" onclick="togglePassword('registerPassword', this)">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                        </svg>
-                    </button>
-                </div>
-                <span class="error-message" id="registerPasswordError">密码至少需要8位，包含字母和数字</span>
-                <div class="mt-2 flex gap-1" id="passwordStrength">
-                    <div class="h-1 flex-1 rounded-full bg-[rgba(255,255,255,0.1)]"></div>
-                    <div class="h-1 flex-1 rounded-full bg-[rgba(255,255,255,0.1)]"></div>
-                    <div class="h-1 flex-1 rounded-full bg-[rgba(255,255,255,0.1)]"></div>
-                    <div class="h-1 flex-1 rounded-full bg-[rgba(255,255,255,0.1)]"></div>
-                </div>
-            </div>
-
-            <div class="mb-5">
-                <label for="confirmPassword" class="block text-sm font-medium text-[#E0E0E0] mb-2">确认密码</label>
-                <input 
-                    type="password" 
-                    id="confirmPassword" 
-                    class="input-field w-full px-4 py-3 rounded-xl text-[#E0E0E0] placeholder-[#6B7280] outline-none"
-                    placeholder="再次输入密码"
-                    autocomplete="new-password"
-                >
-                <span class="error-message" id="confirmPasswordError">两次输入的密码不一致</span>
-            </div>
-
-            <div class="mb-6">
-                <label class="flex items-start cursor-pointer">
-                    <input type="checkbox" id="agreeTerms" class="mt-1 w-4 h-4 rounded border-[rgba(255,255,255,0.2)] bg-[rgba(255,255,255,0.05)] text-[#3B82F6] focus:ring-[#3B82F6] focus:ring-offset-0">
-                    <span class="ml-2 text-sm text-[#9CA3AF]">
-                        我已阅读并同意
-                        <a href="#" class="text-[#3B82F6] hover:text-[#60A5FA]">服务条款</a>
-                        和
-                        <a href="#" class="text-[#3B82F6] hover:text-[#60A5FA]">隐私政策</a>
-                    </span>
-                </label>
-                <span class="error-message" id="termsError">请同意服务条款和隐私政策</span>
-            </div>
-
-            <button type="submit" class="btn-primary w-full py-3 rounded-xl text-white font-semibold text-sm">
-                创建账户
-            </button>
-        </form>
-
-        <div class="mt-6 text-center">
-            <p class="text-[#9CA3AF] text-sm">
-                已有账户？
-                <button onclick="showLogin()" class="text-[#3B82F6] hover:text-[#60A5FA] font-medium ml-1 transition-colors">
-                    立即登录
-                </button>
-            </p>
+      <!-- Process Page -->
+      <section id="page-process" class="page-section hidden">
+        <div class="mb-8">
+          <h2 class="text-3xl font-bold mb-2">电商订单流程</h2>
+          <p class="text-[#9CA3AF]">从下单到收货的完整业务流程</p>
         </div>
-    </div>
-
-    <!-- 成功提示模态框 -->
-    <div id="successModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center hidden z-50">
-        <div class="glass-card rounded-2xl p-8 max-w-sm w-full mx-4 text-center">
-            <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-green-500/20 flex items-center justify-center">
-                <svg class="w-8 h-8 success-check" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                </svg>
-            </div>
-            <h3 class="text-xl font-bold text-[#E0E0E0] mb-2" id="successTitle">操作成功</h3>
-            <p class="text-[#9CA3AF] text-sm mb-6" id="successMessage">您已成功完成操作</p>
-            <button onclick="closeSuccessModal()" class="btn-primary w-full py-2.5 rounded-xl text-white font-medium text-sm">
-                确定
-            </button>
+        <div
+          class="glass-card rounded-3xl p-8 mermaid-container overflow-x-auto"
+        >
+          <div class="mermaid">
+            flowchart TD Start([用户访问商城]) --> Browse[浏览商品] Browse -->
+            Cart{加入购物车?} Cart -->|是| AddCart[添加至购物车] Cart -->|否|
+            Continue[继续浏览] AddCart --> Checkout[结算中心] Continue -->
+            Browse Checkout --> Login{已登录?} Login -->|否| Auth[登录/注册]
+            Login -->|是| Address[选择收货地址] Auth --> Address Address -->
+            Payment[选择支付方式] Payment --> Verify{库存校验} Verify
+            -->|库存不足| StockFail[提示库存不足] Verify -->|库存充足|
+            CreateOrder[创建订单] StockFail --> Browse CreateOrder -->
+            PayStatus{支付状态} PayStatus -->|超时未付| Cancel[自动取消订单]
+            PayStatus -->|支付成功| Notify[通知仓库发货] Notify -->
+            Pick[拣货打包] Pick --> Ship[物流配送] Ship --> Deliver{确认收货}
+            Deliver -->|确认收货| Complete([交易完成]) Deliver -->|7天自动|
+            AutoComplete[自动确认收货] AutoComplete --> Complete Complete -->
+            Review[评价商品] Review --> End([流程结束]) Cancel --> End
+          </div>
         </div>
-    </div>
+      </section>
+
+      <!-- Dataflow Page -->
+      <section id="page-dataflow" class="page-section hidden">
+        <div class="mb-8">
+          <h2 class="text-3xl font-bold mb-2">实时数据处理流程</h2>
+          <p class="text-[#9CA3AF]">大数据平台的实时数据流转架构</p>
+        </div>
+        <div
+          class="glass-card rounded-3xl p-8 mermaid-container overflow-x-auto"
+        >
+          <div class="mermaid">
+            flowchart LR subgraph Source["数据源"] AppSDK["App SDK"] WebLog["Web
+            日志"] ServerLog["服务器日志"] DBChange["数据库变更"] end subgraph
+            Collect["数据采集"] Flume[Flume 采集] Logstash[Logstash 解析]
+            Canal[Canal 同步] end subgraph Stream["流处理层"] Kafka[Kafka
+            消息队列] Flink[Flink 实时计算] Spark[Spark Streaming] end subgraph
+            Storage["数据存储"] HDFS[HDFS 离线存储] ClickHouse[ClickHouse<br />OLAP分析]
+            HBase[HBase 海量存储] end subgraph Application["数据应用"]
+            Dashboard[实时大屏] Recommend[推荐引擎] Alert[智能告警] end AppSDK
+            --> Flume WebLog --> Logstash ServerLog --> Flume DBChange --> Canal
+            Flume --> Kafka Logstash --> Kafka Canal --> Kafka Kafka --> Flink
+            Kafka --> Spark Flink --> ClickHouse Flink --> HBase Spark --> HDFS
+            ClickHouse --> Dashboard HBase --> Recommend Flink --> Alert
+          </div>
+        </div>
+      </section>
+    </main>
 
     <script>
-        // 切换显示/隐藏密码
-        function togglePassword(inputId, button) {
-            const input = document.getElementById(inputId);
-            const isPassword = input.type === 'password';
-            input.type = isPassword ? 'text' : 'password';
-            
-            // 更新图标
-            button.innerHTML = isPassword 
-                ? `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path></svg>`
-                : `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>`;
-        }
+      // Initialize Mermaid
+      mermaid.initialize({
+        startOnLoad: true,
+        theme: "dark",
+        themeVariables: {
+          primaryColor: "#3B82F6",
+          primaryTextColor: "#E0E0E0",
+          primaryBorderColor: "#3B82F6",
+          lineColor: "#9CA3AF",
+          secondaryColor: "#1A1A2E",
+          tertiaryColor: "#0F0F1A",
+          fontFamily: "Inter, system-ui, sans-serif",
+        },
+        flowchart: {
+          useMaxWidth: true,
+          htmlLabels: true,
+          curve: "basis",
+        },
+      });
 
-        // 显示注册表单
-        function showRegister() {
-            document.getElementById('loginContainer').classList.add('hidden');
-            const registerContainer = document.getElementById('registerContainer');
-            registerContainer.classList.remove('hidden');
-            registerContainer.classList.add('fade-in');
-        }
-
-        // 显示登录表单
-        function showLogin() {
-            document.getElementById('registerContainer').classList.add('hidden');
-            const loginContainer = document.getElementById('loginContainer');
-            loginContainer.classList.remove('hidden');
-            loginContainer.classList.add('fade-in');
-        }
-
-        // 显示错误
-        function showError(inputId, errorId, show = true) {
-            const input = document.getElementById(inputId);
-            const error = document.getElementById(errorId);
-            if (show) {
-                input.classList.add('input-error');
-                error.classList.add('show');
-            } else {
-                input.classList.remove('input-error');
-                error.classList.remove('show');
-            }
-        }
-
-        // 验证邮箱格式
-        function isValidEmail(email) {
-            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-        }
-
-        // 验证密码强度
-        function checkPasswordStrength(password) {
-            let strength = 0;
-            if (password.length >= 8) strength++;
-            if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
-            if (/\d/.test(password)) strength++;
-            if (/[^a-zA-Z0-9]/.test(password)) strength++;
-            return strength;
-        }
-
-        // 更新密码强度指示器
-        function updatePasswordStrength(password) {
-            const strength = checkPasswordStrength(password);
-            const bars = document.querySelectorAll('#passwordStrength > div');
-            const colors = ['bg-red-500', 'bg-yellow-500', 'bg-blue-500', 'bg-green-500'];
-            
-            bars.forEach((bar, index) => {
-                bar.className = 'h-1 flex-1 rounded-full bg-[rgba(255,255,255,0.1)]';
-                if (index < strength) {
-                    bar.classList.remove('bg-[rgba(255,255,255,0.1)]');
-                    bar.classList.add(colors[strength - 1]);
-                }
-            });
-        }
-
-        // 监听密码输入
-        document.getElementById('registerPassword').addEventListener('input', function(e) {
-            updatePasswordStrength(e.target.value);
+      // Page navigation
+      function showPage(pageName) {
+        // Hide all pages
+        document.querySelectorAll(".page-section").forEach((section) => {
+          section.classList.add("hidden");
         });
 
-        // 登录表单验证
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            let isValid = true;
-
-            const email = document.getElementById('loginEmail').value.trim();
-            const password = document.getElementById('loginPassword').value;
-
-            // 验证邮箱
-            if (!email || !isValidEmail(email)) {
-                showError('loginEmail', 'loginEmailError');
-                isValid = false;
-            } else {
-                showError('loginEmail', 'loginEmailError', false);
-            }
-
-            // 验证密码
-            if (!password) {
-                showError('loginPassword', 'loginPasswordError');
-                isValid = false;
-            } else {
-                showError('loginPassword', 'loginPasswordError', false);
-            }
-
-            if (isValid) {
-                // 模拟登录成功
-                showSuccessModal('登录成功', '欢迎回来！正在为您跳转...');
-            } else {
-                // 添加抖动效果
-                document.getElementById('loginContainer').classList.add('shake');
-                setTimeout(() => {
-                    document.getElementById('loginContainer').classList.remove('shake');
-                }, 500);
-            }
-        });
-
-        // 注册表单验证
-        document.getElementById('registerForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            let isValid = true;
-
-            const name = document.getElementById('registerName').value.trim();
-            const email = document.getElementById('registerEmail').value.trim();
-            const password = document.getElementById('registerPassword').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-            const agreeTerms = document.getElementById('agreeTerms').checked;
-
-            // 验证用户名
-            if (!name || name.length < 2) {
-                showError('registerName', 'registerNameError');
-                isValid = false;
-            } else {
-                showError('registerName', 'registerNameError', false);
-            }
-
-            // 验证邮箱
-            if (!email || !isValidEmail(email)) {
-                showError('registerEmail', 'registerEmailError');
-                isValid = false;
-            } else {
-                showError('registerEmail', 'registerEmailError', false);
-            }
-
-            // 验证密码
-            if (!password || password.length < 8 || !/[a-zA-Z]/.test(password) || !/\d/.test(password)) {
-                showError('registerPassword', 'registerPasswordError');
-                isValid = false;
-            } else {
-                showError('registerPassword', 'registerPasswordError', false);
-            }
-
-            // 验证确认密码
-            if (password !== confirmPassword || !confirmPassword) {
-                showError('confirmPassword', 'confirmPasswordError');
-                isValid = false;
-            } else {
-                showError('confirmPassword', 'confirmPasswordError', false);
-            }
-
-            // 验证条款同意
-            if (!agreeTerms) {
-                document.getElementById('termsError').classList.add('show');
-                isValid = false;
-            } else {
-                document.getElementById('termsError').classList.remove('show');
-            }
-
-            if (isValid) {
-                // 模拟注册成功
-                showSuccessModal('注册成功', '您的账户已创建，请查收验证邮件。');
-            } else {
-                // 添加抖动效果
-                document.getElementById('registerContainer').classList.add('shake');
-                setTimeout(() => {
-                    document.getElementById('registerContainer').classList.remove('shake');
-                }, 500);
-            }
-        });
-
-        // 实时验证 - 输入时清除错误
-        ['loginEmail', 'loginPassword'].forEach(id => {
-            document.getElementById(id).addEventListener('input', function() {
-                showError(id, id + 'Error', false);
-            });
-        });
-
-        ['registerName', 'registerEmail', 'registerPassword', 'confirmPassword'].forEach(id => {
-            document.getElementById(id).addEventListener('input', function() {
-                showError(id, id + 'Error', false);
-            });
-        });
-
-        document.getElementById('agreeTerms').addEventListener('change', function() {
-            document.getElementById('termsError').classList.remove('show');
-        });
-
-        // 显示成功模态框
-        function showSuccessModal(title, message) {
-            document.getElementById('successTitle').textContent = title;
-            document.getElementById('successMessage').textContent = message;
-            document.getElementById('successModal').classList.remove('hidden');
+        // Show selected page
+        const targetPage = document.getElementById(`page-${pageName}`);
+        if (targetPage) {
+          targetPage.classList.remove("hidden");
         }
 
-        // 关闭成功模态框
-        function closeSuccessModal() {
-            document.getElementById('successModal').classList.add('hidden');
+        // Update nav active state
+        document.querySelectorAll(".nav-item").forEach((item) => {
+          item.classList.remove("active");
+        });
+        const navItem = document.getElementById(`nav-${pageName}`);
+        if (navItem) {
+          navItem.classList.add("active");
         }
 
-        // 点击模态框外部关闭
-        document.getElementById('successModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeSuccessModal();
-            }
-        });
+        // Re-render mermaid for the visible page
+        setTimeout(() => {
+          mermaid.init(undefined, document.querySelectorAll(".mermaid"));
+        }, 100);
+      }
+
+      // Initialize on load
+      document.addEventListener("DOMContentLoaded", () => {
+        showPage("home");
+      });
     </script>
-</body>
+  </body>
 </html>

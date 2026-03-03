@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "VibeFrame - 草图即刻化境引擎",
+  title: "VibeFrame - 草图即页面",
   description: "将手绘草图或自然语言描述实时转换为可交互的前端 UI 页面",
 };
 

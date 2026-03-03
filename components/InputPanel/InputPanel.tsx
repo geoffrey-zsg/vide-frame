@@ -49,7 +49,7 @@ export function InputPanel({
           </div>
           <div>
             <h1 className="text-xl font-bold text-slate-800 tracking-tight">VibeFrame</h1>
-            <p className="text-xs font-medium text-slate-500">草图即刻化境引擎</p>
+            <p className="text-xs font-medium text-slate-500">草图即页面</p>
           </div>
         </div>
         <SessionList

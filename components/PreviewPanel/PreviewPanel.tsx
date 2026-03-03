@@ -22,6 +22,78 @@ function ExitFullscreenIcon() {
   );
 }
 
+// 像素小动物组件 - 一只奔跑的小猫
+function PixelPet({ isRunning }: { isRunning: boolean }) {
+  return (
+    <div className={`pixel-pet-container ${isRunning ? 'running' : ''}`}>
+      <div className="pixel-cat">
+        {/* 像素小猫使用 CSS box-shadow 绘制 */}
+        <div className="cat-body" />
+      </div>
+      <style jsx>{`
+        .pixel-pet-container {
+          position: relative;
+          width: 40px;
+          height: 32px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .pixel-cat {
+          width: 4px;
+          height: 4px;
+          animation: ${isRunning ? 'bounce 0.3s infinite alternate' : 'idle 2s infinite ease-in-out'};
+        }
+
+        .cat-body {
+          width: 4px;
+          height: 4px;
+          background: transparent;
+          box-shadow:
+            /* 耳朵 */
+            4px 0 0 #ff6b6b, 8px 0 0 #ff6b6b,
+            24px 0 0 #ff6b6b, 28px 0 0 #ff6b6b,
+            /* 头部 */
+            0 4px 0 #ff8787, 4px 4px 0 #ff8787, 8px 4px 0 #ff8787, 12px 4px 0 #ff8787,
+            20px 4px 0 #ff8787, 24px 4px 0 #ff8787, 28px 4px 0 #ff8787, 32px 4px 0 #ff8787,
+            /* 眼睛和脸部 */
+            4px 8px 0 #ff8787, 8px 8px 0 #333, 12px 8px 0 #ff8787, 16px 8px 0 #ff8787,
+            20px 8px 0 #ff8787, 24px 8px 0 #333, 28px 8px 0 #ff8787,
+            /* 鼻子 */
+            16px 12px 0 #ffb6b6,
+            /* 身体 */
+            0 12px 0 #ff8787, 4px 12px 0 #ff8787, 8px 12px 0 #ff8787, 24px 12px 0 #ff8787, 28px 12px 0 #ff8787, 32px 12px 0 #ff8787,
+            4px 16px 0 #ff6b6b, 8px 16px 0 #ff6b6b, 12px 16px 0 #ff6b6b, 16px 16px 0 #ff6b6b, 20px 16px 0 #ff6b6b, 24px 16px 0 #ff6b6b,
+            /* 腿 */
+            4px 20px 0 #ff6b6b, 8px 20px 0 #ff6b6b, 20px 20px 0 #ff6b6b, 24px 20px 0 #ff6b6b,
+            /* 尾巴 */
+            28px 16px 0 #ff8787, 32px 12px 0 #ff8787;
+        }
+
+        @keyframes idle {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-2px); }
+        }
+
+        @keyframes bounce {
+          0% { transform: translateY(0) scaleY(1); }
+          100% { transform: translateY(-4px) scaleY(0.95); }
+        }
+
+        .running {
+          animation: runAcross 2s linear infinite;
+        }
+
+        @keyframes runAcross {
+          0% { transform: translateX(-100px); }
+          100% { transform: translateX(100px); }
+        }
+      `}</style>
+    </div>
+  );
+}
+
 interface PreviewPanelProps {
   isGenerating: boolean;
   currentHTML: string | null;
@@ -29,6 +101,7 @@ interface PreviewPanelProps {
   providerName: string;
   modelName: string;
   onOpenSettings: () => void;
+  iframeKey?: number;
 }
 
 export function PreviewPanel({
@@ -38,6 +111,7 @@ export function PreviewPanel({
   providerName,
   modelName,
   onOpenSettings,
+  sessionKey: _sessionKey = 'default',
 }: PreviewPanelProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -47,6 +121,8 @@ export function PreviewPanel({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [scale, setScale] = useState(1);
   const [containerHeight, setContainerHeight] = useState(0);
+  const [toast, setToast] = useState<{ message: string; visible: boolean }>({ message: '', visible: false });
+  const toastTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // 固定视口宽度，模拟桌面浏览器
   const VIEWPORT_WIDTH = 1440;
@@ -111,6 +187,17 @@ export function PreviewPanel({
     return () => observer.disconnect();
   }, [VIEWPORT_WIDTH]);
 
+  // 显示 toast 提示
+  const showToast = useCallback((message: string) => {
+    if (toastTimerRef.current) {
+      clearTimeout(toastTimerRef.current);
+    }
+    setToast({ message, visible: true });
+    toastTimerRef.current = setTimeout(() => {
+      setToast(prev => ({ ...prev, visible: false }));
+    }, 3000);
+  }, []);
+
   // 监听来自 iframe 的消息
   useEffect(() => {
     function handleMessage(e: MessageEvent) {
@@ -124,12 +211,15 @@ export function PreviewPanel({
       } else if (msg.type === 'render-success') {
         // 渲染成功时清除错误
         setRenderError(null);
+      } else if (msg.type === 'link-clicked') {
+        // 链接被点击，显示提示
+        showToast('沙箱环境：链接跳转已禁用');
       }
     }
 
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, []);
+  }, [showToast]);
 
   // 主动探测 iframe 就绪状态（处理竞态条件）
   useEffect(() => {
@@ -196,17 +286,26 @@ export function PreviewPanel({
               <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
               生成中...
             </span>
-          ) : (
+          ) : currentHTML ? (
             <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-700 font-medium shrink-0 shadow-sm border border-emerald-100">
               <span className="w-2 h-2 rounded-full bg-emerald-500" />
               已完成
             </span>
+          ) : (
+            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-50 text-slate-600 font-medium shrink-0 shadow-sm border border-slate-200">
+              <span className="w-2 h-2 rounded-full bg-slate-400" />
+              等待中
+            </span>
           )}
+          {/* 像素小动物 - 生成中时跑动 */}
+          <div className="hidden sm:flex items-center justify-center w-24 h-8 overflow-hidden">
+            <PixelPet isRunning={isGenerating} />
+          </div>
           {/* 当前模型信息 */}
           <button
             type="button"
             onClick={onOpenSettings}
-            className="text-xs font-medium text-slate-600 hover:text-slate-900 truncate max-w-[200px] border border-slate-200 bg-white rounded-md px-2.5 py-1.5 hover:bg-slate-50 transition-colors shadow-sm cursor-pointer"
+            className="text-xs font-medium text-slate-600 hover:text-slate-900 truncate max-w-[320px] border border-slate-200 bg-white rounded-md px-2.5 py-1.5 hover:bg-slate-50 transition-colors shadow-sm cursor-pointer"
             title="点击修改模型配置"
           >
             {providerName} / {modelName}
@@ -258,6 +357,14 @@ export function PreviewPanel({
             渲染中...
           </div>
         )}
+        {/* Toast 提示 - 链接点击通知 */}
+        <div
+          className={`absolute bottom-4 left-1/2 -translate-x-1/2 z-30 px-4 py-2 rounded-lg bg-slate-800/90 text-white text-sm font-medium shadow-lg backdrop-blur-sm transition-all duration-300 ${
+            toast.visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
+          }`}
+        >
+          {toast.message}
+        </div>
         <iframe
           ref={iframeRef}
           srcDoc={getSandboxTemplate()}
@@ -272,6 +379,12 @@ export function PreviewPanel({
             transformOrigin: 'top left',
           }}
         />
+        {/* Toast 提示 - 链接点击通知 */}
+        {toast.visible && (
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 px-4 py-2 rounded-lg bg-slate-800/90 text-white text-sm font-medium shadow-lg backdrop-blur-sm animate-in fade-in slide-in-from-bottom-2 duration-200">
+            {toast.message}
+          </div>
+        )}
       </div>
     </div>
   );

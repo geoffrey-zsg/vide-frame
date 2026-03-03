@@ -33,7 +33,18 @@ export const BASE_SYSTEM_TEMPLATE = `你是一名前端 UI 专家，擅长使用
     - 页面内交互使用按钮或 onclick 事件
     - 外部链接使用 target="_blank" 在新标签页打开
     - 锚点链接（#）仅用于页内滚动，不要用于页面跳转
-12. 【重要】代码精简原则（防止生成过大导致失败）：
+12. 【重要】Mermaid 图表语法约束：
+    - 如果页面包含 Mermaid 图表（flowchart、sequenceDiagram、mindmap、graph 等），代码块内必须保留换行符
+    - 每个节点、连线、subgraph 必须单独一行，禁止压缩成单行
+    - 正确示例：
+      <div class="mermaid">
+      flowchart TD
+        A[开始] --> B{判断}
+        B -->|是| C[处理]
+        B -->|否| D[结束]
+      </div>
+    - 错误示例（禁止）：<div class="mermaid">flowchart TD A[开始] --> B{判断} B -->|是| C[处理]</div>
+13. 【重要】代码精简原则（防止生成过大导致失败）：
     - 优先实现核心功能，避免过度设计
     - 使用简洁的 Tailwind 类，不要堆砌过多装饰性样式
     - 数据展示使用 3-5 条示例数据即可，不要生成大量重复内容
