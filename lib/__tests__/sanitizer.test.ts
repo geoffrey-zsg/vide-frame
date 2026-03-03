@@ -14,12 +14,12 @@ describe('sanitizeHTML', () => {
     expect(result).toBe(input);
   });
 
-  it('should strip external script tags with non-whitelisted src', () => {
-    const input = '<script src="https://evil.com/hack.js"></script><p>Safe content</p>';
+  // 内部自用版本：允许所有外部脚本（放宽限制）
+  it('should allow external script tags from any source', () => {
+    const input = '<script src="https://any-cdn.com/lib.js"></script><p>Content</p>';
     const result = sanitizeHTML(input);
-    expect(result).not.toContain('evil.com');
-    expect(result).not.toContain('<script src="https://evil.com/hack.js">');
-    expect(result).toContain('<p>Safe content</p>');
+    expect(result).toContain('<script src="https://any-cdn.com/lib.js">');
+    expect(result).toContain('<p>Content</p>');
   });
 
   it('should allow inline onclick and simple interaction events', () => {
@@ -28,28 +28,29 @@ describe('sanitizeHTML', () => {
     expect(result).toBe(input);
   });
 
-  it('should strip fetch calls inside inline script', () => {
-    const input = '<script>fetch("https://evil.com/steal")</script>';
+  // 内部自用版本：允许所有内联脚本（放宽限制）
+  it('should allow fetch calls inside inline script', () => {
+    const input = '<script>fetch("https://api.example.com/data")</script>';
     const result = sanitizeHTML(input);
-    expect(result).not.toContain('fetch(');
+    expect(result).toContain('fetch(');
   });
 
-  it('should strip eval()', () => {
+  it('should allow eval()', () => {
     const input = '<script>eval("alert(1)")</script>';
     const result = sanitizeHTML(input);
-    expect(result).not.toContain('eval(');
+    expect(result).toContain('eval(');
   });
 
-  it('should strip document.cookie access', () => {
+  it('should allow document.cookie access', () => {
     const input = '<script>var x = document.cookie;</script>';
     const result = sanitizeHTML(input);
-    expect(result).not.toContain('document.cookie');
+    expect(result).toContain('document.cookie');
   });
 
-  it('should strip window.location manipulation', () => {
-    const input = '<script>window.location = "https://evil.com";</script>';
+  it('should allow window.location manipulation', () => {
+    const input = '<script>window.location = "https://example.com";</script>';
     const result = sanitizeHTML(input);
-    expect(result).not.toContain('window.location');
+    expect(result).toContain('window.location');
   });
 
   it('should allow TailwindCSS CDN script tag', () => {
@@ -65,10 +66,11 @@ describe('sanitizeHTML', () => {
     expect(result).toBe(input);
   });
 
-  it('should strip WebSocket usage inside inline script', () => {
-    const input = '<script>const ws = new WebSocket("wss://evil.com/ws");</script>';
+  // 内部自用版本：允许 WebSocket（放宽限制）
+  it('should allow WebSocket usage inside inline script', () => {
+    const input = '<script>const ws = new WebSocket("wss://example.com/ws");</script>';
     const result = sanitizeHTML(input);
-    expect(result).not.toContain('WebSocket');
+    expect(result).toContain('WebSocket');
   });
 
   // Markdown code block stripping tests

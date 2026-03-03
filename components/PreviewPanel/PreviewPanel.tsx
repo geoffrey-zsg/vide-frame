@@ -261,7 +261,7 @@ export function PreviewPanel({
         <iframe
           ref={iframeRef}
           srcDoc={getSandboxTemplate()}
-          sandbox="allow-scripts"
+          sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-pointer-lock allow-top-navigation allow-popups-to-escape-sandbox allow-downloads"
           className="border-0 bg-white"
           title="预览"
           style={{

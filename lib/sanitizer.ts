@@ -1,11 +1,9 @@
-// HTML Sanitizer with whitelist-based CDN filtering and dangerous pattern blocking.
+// HTML Sanitizer - 内部自用版本，宽松模式，允许所有 JS 执行
 //
-// Rules:
-// - Whitelisted CDN domains for external scripts: cdn.tailwindcss.com, unpkg.com, cdn.jsdelivr.net
-// - External <script src="...">: keep if src matches whitelist, remove otherwise
-// - Inline <script>: replace dangerous API calls with blocked comments, remove tag if nothing remains
-// - Strip markdown code block markers (```html, ```)
-// - All other HTML (tags, attributes, inline events, CSS) is preserved as-is
+// 规则：
+// - 允许所有外部脚本（移除 CDN 白名单限制）
+// - 允许所有内联脚本（移除危险模式检查）
+// - 仅清理 markdown 代码块标记
 
 const WHITELISTED_CDNS = [
   'cdn.tailwindcss.com',
@@ -13,17 +11,10 @@ const WHITELISTED_CDNS = [
   'cdn.jsdelivr.net',
 ];
 
+// 危险模式检查已禁用 - 内部自用项目允许完整 JS 交互
+// 如需恢复安全检查，取消注释以下数组
 const DANGEROUS_PATTERNS: RegExp[] = [
-  /\bfetch\s*\(/g,
-  /\bXMLHttpRequest\b/g,
-  /\bWebSocket\b/g,
-  /\beval\s*\(/g,
-  /\bnew\s+Function\s*\(/g,
-  /\bdocument\.cookie\b/g,
-  /\bwindow\.location\b/g,
-  /\blocalStorage\b/g,
-  /\bsessionStorage\b/g,
-  /\bwindow\.open\s*\(/g,
+  // 禁用所有危险模式检查，允许完整 JS 交互
 ];
 
 /**
@@ -43,29 +34,18 @@ function stripMarkdownCodeBlocks(html: string): string {
 }
 
 function isWhitelistedSrc(src: string): boolean {
-  try {
-    const url = new URL(src);
-    return WHITELISTED_CDNS.some(
-      (cdn) => url.hostname === cdn || url.hostname.endsWith('.' + cdn)
-    );
-  } catch {
-    return false;
-  }
+  // 内部自用：允许所有外部脚本源
+  return true;
 }
 
 function sanitizeInlineScript(content: string): string {
-  let sanitized = content;
-  for (const pattern of DANGEROUS_PATTERNS) {
-    pattern.lastIndex = 0;
-    sanitized = sanitized.replace(pattern, '/* blocked */');
-  }
-  return sanitized;
+  // 内部自用版本：允许所有内联脚本，不做危险模式检查
+  return content;
 }
 
 function isOnlyBlocked(content: string): boolean {
-  const stripped = content.replace(/\/\*\s*blocked\s*\*\//g, '').trim();
-  const cleaned = stripped.replace(/["'();,\s]|var\s+\w+\s*=|const\s+\w+\s*=|let\s+\w+\s*=|new\s+/g, '').trim();
-  return cleaned.length === 0;
+  // 内部自用版本：永远不认为内容被完全阻止
+  return false;
 }
 
 export function sanitizeHTML(html: string): string {
