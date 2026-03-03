@@ -203,6 +203,23 @@ export function getSandboxTemplate(): string {
         root.innerHTML = contentToRender;
         lastRenderedHTML = contentToRender;
 
+        // 执行内联脚本（innerHTML 插入的脚本不会自动执行）
+        function executeScripts(element) {
+          var scripts = element.querySelectorAll('script');
+          scripts.forEach(function(oldScript) {
+            var newScript = document.createElement('script');
+            // 复制属性
+            Array.from(oldScript.attributes).forEach(function(attr) {
+              newScript.setAttribute(attr.name, attr.value);
+            });
+            // 复制内容
+            newScript.textContent = oldScript.textContent;
+            // 替换执行
+            oldScript.parentNode.replaceChild(newScript, oldScript);
+          });
+        }
+        executeScripts(root);
+
         // 移除渲染中状态
         requestAnimationFrame(function() {
           root.classList.remove('vf-rendering');
