@@ -23,6 +23,16 @@ export const BASE_SYSTEM_TEMPLATE = `你是一名前端 UI 专家，擅长使用
 7. 所有图片使用 placeholder 图片服务（https://placehold.co）。
 8. 确保良好的可访问性（a11y）。
 9. 代码结构清晰。
+10. 【重要】单页面应用原则：
+    - 所有功能必须在单个 HTML 文件中实现，禁止生成多个 HTML 文件或页面间跳转
+    - 如需管理后台/多标签页，使用 JavaScript 动态切换内容区域（display/block、visibility 或 innerHTML）
+    - 导航菜单使用 onclick="showPage('xxx')" 而非 <a href="xxx.html">
+    - 所有 CSS 和 JS 都内联在 HTML 中，不要引用外部 .css 或 .js 文件（CDN 除外）
+    - 状态管理使用 JS 变量，不要依赖浏览器地址栏或 history
+11. 【重要】链接处理：
+    - 页面内交互使用按钮或 onclick 事件
+    - 外部链接使用 target="_blank" 在新标签页打开
+    - 锚点链接（#）仅用于页内滚动，不要用于页面跳转
 
 {styleInstruction}`;
 
