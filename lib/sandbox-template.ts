@@ -13,6 +13,8 @@ export function getSandboxTemplate(): string {
     }
     body {
       margin: 0;
+      /* 透明背景，让页面自身背景色显示 */
+      background-color: transparent;
       /* 防止内容变化时的布局抖动 */
       overflow-x: hidden;
     }
@@ -195,6 +197,24 @@ export function getSandboxTemplate(): string {
     setTimeout(function() {
       parent.postMessage({ type: 'ready' }, '*');
     }, 0);
+
+    // 处理链接点击 - 允许在新标签页打开
+    document.addEventListener('click', function(e) {
+      var target = e.target;
+      // 向上查找最近的 A 标签
+      while (target && target.tagName !== 'A') {
+        target = target.parentElement;
+      }
+      if (target && target.tagName === 'A') {
+        var href = target.getAttribute('href');
+        // 如果是外部链接或需要新窗口打开
+        if (href && (href.startsWith('http') || href.startsWith('//') || target.getAttribute('target') === '_blank')) {
+          // 不阻止默认行为，让链接正常跳转
+          // 但如果是相对路径且没有 target，在当前 iframe 内跳转
+          return;
+        }
+      }
+    });
   <\/script>
 </body>
 </html>`;

@@ -262,9 +262,10 @@ export function PreviewPanel({
           ref={iframeRef}
           srcDoc={getSandboxTemplate()}
           sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-pointer-lock allow-top-navigation allow-popups-to-escape-sandbox allow-downloads"
-          className="border-0 bg-white"
+          className="border-0"
           title="预览"
           style={{
+            backgroundColor: 'transparent',
             width: `${VIEWPORT_WIDTH}px`,
             height: scale > 0 ? `${containerHeight / scale}px` : '100%',
             transform: `scale(${scale})`,
