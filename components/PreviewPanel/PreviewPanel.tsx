@@ -111,7 +111,7 @@ export function PreviewPanel({
   providerName,
   modelName,
   onOpenSettings,
-  sessionKey: _sessionKey = 'default',
+  iframeKey: _iframeKey,
 }: PreviewPanelProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
