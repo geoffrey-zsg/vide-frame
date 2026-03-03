@@ -64,7 +64,8 @@ export class OpenAIProvider implements LLMProvider {
       model: this.model,
       messages,
       stream: true,
-      max_tokens: 16384,
+      max_tokens: 4096,  // 进一步降低以防止 OpenRouter 等代理溢出
+      temperature: 0.7,
     })
 
     for await (const chunk of stream) {
