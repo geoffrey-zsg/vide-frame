@@ -90,6 +90,7 @@ describe('Core type definitions', () => {
       provider: 'openai',
       model: 'gpt-4o',
       apiKey: 'sk-test',
+      baseUrl: '',
     };
 
     const session: Session = {

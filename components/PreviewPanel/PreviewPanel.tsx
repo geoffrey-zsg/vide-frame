@@ -138,7 +138,7 @@ export function PreviewPanel({
 
     // 发送 ping 让 iframe 响应 ready
     function pingIframe() {
-      if (iframe.contentWindow) {
+      if (iframe?.contentWindow) {
         iframe.contentWindow.postMessage({ type: 'ping' }, '*');
       }
     }
