@@ -13,8 +13,6 @@ export function getSandboxTemplate(): string {
     }
     body {
       margin: 0;
-      /* 透明背景，让页面自身背景色显示 */
-      background-color: transparent;
       /* 防止内容变化时的布局抖动 */
       overflow-x: hidden;
     }
@@ -42,6 +40,8 @@ export function getSandboxTemplate(): string {
     #vf-root {
       opacity: 1;
       transition: opacity 0.15s ease-out;
+      /* 默认最小高度，支持 body 背景色 */
+      min-height: 100vh;
     }
     #vf-root.vf-rendering {
       opacity: 0.7;
@@ -79,16 +79,62 @@ export function getSandboxTemplate(): string {
       if (content.endsWith(CODE_BLOCK_START)) {
         content = content.slice(0, -CODE_BLOCK_START.length).trim();
       }
-      if (content.includes('<body') || content.includes('<!DOCTYPE')) {
+
+      // 如果是完整 HTML 文档，提取 head 和 body 内容
+      if (content.includes('<!DOCTYPE') || content.includes('<html')) {
         try {
           var parser = new DOMParser();
           var doc = parser.parseFromString(content, 'text/html');
-          return doc.body.innerHTML || content;
+
+          // 提取 head 内容（样式、脚本等）
+          var headContent = doc.head.innerHTML || '';
+
+          // 提取 body 内容和属性
+          var bodyContent = doc.body.innerHTML || '';
+          var bodyMatch = content.match(/<body[^>]*>/i);
+          var bodyAttrs = {};
+          if (bodyMatch) {
+            var styleMatch = bodyMatch[0].match(/style\s*=\s*["']([^"']*)["']/i);
+            var classMatch = bodyMatch[0].match(/class\s*=\s*["']([^"']*)["']/i);
+            if (styleMatch) bodyAttrs.style = styleMatch[1];
+            if (classMatch) bodyAttrs.className = classMatch[1];
+          }
+
+          return {
+            type: 'full',
+            headContent: headContent,
+            bodyContent: bodyContent,
+            bodyAttrs: bodyAttrs
+          };
         } catch (e) {
-          return content;
+          return { type: 'simple', content: content };
         }
       }
-      return content;
+
+      // 如果只有 body 标签
+      if (content.includes('<body')) {
+        try {
+          var parser2 = new DOMParser();
+          var doc2 = parser2.parseFromString(content, 'text/html');
+          var bodyMatch2 = content.match(/<body[^>]*>/i);
+          var bodyAttrs2 = {};
+          if (bodyMatch2) {
+            var styleMatch2 = bodyMatch2[0].match(/style\s*=\s*["']([^"']*)["']/i);
+            var classMatch2 = bodyMatch2[0].match(/class\s*=\s*["']([^"']*)["']/i);
+            if (styleMatch2) bodyAttrs2.style = styleMatch2[1];
+            if (classMatch2) bodyAttrs2.className = classMatch2[1];
+          }
+          return {
+            type: 'simple',
+            content: doc2.body.innerHTML || content,
+            bodyAttrs: bodyAttrs2
+          };
+        } catch (e) {
+          return { type: 'simple', content: content };
+        }
+      }
+
+      return { type: 'simple', content: content };
     }
 
     function safeRender(html) {
@@ -96,22 +142,72 @@ export function getSandboxTemplate(): string {
         return false;
       }
       try {
-        var content = parseAndExtract(html);
-        if (!content || !content.trim()) {
+        var parsed = parseAndExtract(html);
+        var contentToRender = '';
+        var bodyAttrs = {};
+
+        if (parsed.type === 'full') {
+          // 完整 HTML：注入 head 内容，提取 body 内容和属性
+          contentToRender = parsed.bodyContent;
+          bodyAttrs = parsed.bodyAttrs || {};
+
+          // 将用户的 head 内容（样式、字体等）注入到沙箱 head
+          if (parsed.headContent) {
+            var existingUserHead = document.getElementById('vf-user-head');
+            if (existingUserHead) {
+              existingUserHead.innerHTML = parsed.headContent;
+            } else {
+              var userHead = document.createElement('div');
+              userHead.id = 'vf-user-head';
+              userHead.style.display = 'none';
+              userHead.innerHTML = parsed.headContent;
+              document.head.appendChild(userHead);
+              // 提取并移动样式标签到 head，确保生效
+              var styles = userHead.querySelectorAll('style, link[rel="stylesheet"]');
+              styles.forEach(function(el) {
+                document.head.appendChild(el);
+              });
+            }
+          }
+        } else {
+          // 简单内容
+          contentToRender = parsed.content || html;
+          bodyAttrs = parsed.bodyAttrs || {};
+        }
+
+        if (!contentToRender || !contentToRender.trim()) {
           return false;
         }
+
         // 避免 HTML 相同时重复渲染
-        if (content === lastRenderedHTML) {
+        if (contentToRender === lastRenderedHTML) {
           return true;
         }
+
         // 添加渲染中状态
         root.classList.add('vf-rendering');
-        root.innerHTML = content;
-        lastRenderedHTML = content;
+
+        // 应用 body 的样式属性到 vf-root
+        if (bodyAttrs.style) {
+          root.style.cssText = bodyAttrs.style;
+        } else {
+          root.style.cssText = '';
+        }
+
+        if (bodyAttrs.className) {
+          root.className = 'vf-rendering ' + bodyAttrs.className;
+        } else {
+          root.className = 'vf-rendering';
+        }
+
+        root.innerHTML = contentToRender;
+        lastRenderedHTML = contentToRender;
+
         // 移除渲染中状态
         requestAnimationFrame(function() {
           root.classList.remove('vf-rendering');
         });
+
         return true;
       } catch (err) {
         console.error('Render error:', err);

@@ -182,7 +182,7 @@ export function PreviewPanel({
   const isStreamRendering = isGenerating && currentHTML;
 
   return (
-    <div ref={containerRef} className="flex flex-col h-full bg-slate-50/50">
+    <div ref={containerRef} className="flex flex-col h-full">
       {/* Toolbar */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-white/80 backdrop-blur shrink-0 shadow-sm z-20">
         <div className="flex items-center gap-3 text-sm min-w-0">
@@ -242,13 +242,13 @@ export function PreviewPanel({
       <div ref={previewAreaRef} className="relative flex-1 overflow-hidden">
         {/* 初始骨架屏 - 仅在无内容且非生成中时显示 */}
         {showSkeleton && (
-          <div className="absolute inset-0 z-10 bg-white transition-opacity duration-300">
+          <div className="absolute inset-0 z-10 transition-opacity duration-300">
             <Skeleton />
           </div>
         )}
         {/* 错误覆盖层 - 半透明背景，不影响 iframe 布局 */}
         {showError && (
-          <div className="absolute inset-0 z-20 bg-white/95 backdrop-blur-sm transition-opacity duration-200">
+          <div className="absolute inset-0 z-20 backdrop-blur-sm transition-opacity duration-200">
             <Skeleton error={renderError ?? undefined} />
           </div>
         )}
